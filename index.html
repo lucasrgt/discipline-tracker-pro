@@ -7694,9 +7694,10 @@
                             Data
                           </label>
                           <input
+                            key={editingEvaluation || 'new'}
                             type="date"
-                            value={newEval.date}
-                            onChange={(e) =>
+                            defaultValue={newEval.date}
+                            onBlur={(e) =>
                               setNewEval({ ...newEval, date: e.target.value })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -8094,9 +8095,10 @@
                             Data:
                           </label>
                           <input
+                            key={editingLog || 'new'}
                             type="date"
-                            value={newLog.date}
-                            onChange={(e) =>
+                            defaultValue={newLog.date}
+                            onBlur={(e) =>
                               setNewLog({ ...newLog, date: e.target.value })
                             }
                             className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm"
@@ -8266,17 +8268,15 @@
                                       deficit
                                     </strong>
                                     {getRefeedStatus.lastRefeedDate &&
-                                      ` e ${
-                                        getRefeedStatus.daysSinceRefeed
-                                      } dias desde o último refeed`}
+                                      ` e ${getRefeedStatus.daysSinceRefeed} dias desde o último refeed`}
                                     . É hora de fazer um refeed estratégico para
                                     manter o metabolismo ativo!
                                   </p>
                                   <p className="text-xs text-green-300">
                                     💡 Marque "Dia de Refeed" e coma{" "}
-                                    {getRefeedStatus.refeedRecommendation}{" "}
-                                    kcal hoje. Foque em carboidratos limpos
-                                    (arroz, batata-doce, aveia).
+                                    {getRefeedStatus.refeedRecommendation} kcal
+                                    hoje. Foque em carboidratos limpos (arroz,
+                                    batata-doce, aveia).
                                   </p>
                                 </div>
                               )}
