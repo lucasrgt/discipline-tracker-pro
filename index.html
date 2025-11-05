@@ -1304,20 +1304,28 @@
         };
 
         const handleSaveLog = () => {
-          if (!newLog.calories && !newLog.isFasting) return;
+          // Validação: Se fitness está ativo, precisa de calorias ou jejum
+          // Se fitness está desativado, pode salvar só com dados espirituais/nofap
+          if (fitnessModeEnabled && !newLog.calories && !newLog.isFasting) {
+            alert("Por favor, preencha as calorias ou marque como jejum!");
+            return;
+          }
 
           const logData = {
             date: newLog.date,
-            calories: newLog.isFasting ? 0 : Number(newLog.calories),
-            isFasting: newLog.isFasting || false,
-            isRefeed: newLog.isRefeed || false,
-            exerciseCalories: {
-              strength: Number(newLog.exerciseCalories?.strength || 0),
-              cardio: Number(newLog.exerciseCalories?.cardio || 0),
-            },
-            hungerLevel: Number(newLog.hungerLevel || 5),
-            energyLevel: Number(newLog.energyLevel || 5),
-            notes: newLog.notes || "",
+            // Só salva calorias se fitness estiver ativo
+            ...(fitnessModeEnabled && {
+              calories: newLog.isFasting ? 0 : Number(newLog.calories),
+              isFasting: newLog.isFasting || false,
+              isRefeed: newLog.isRefeed || false,
+              exerciseCalories: {
+                strength: Number(newLog.exerciseCalories?.strength || 0),
+                cardio: Number(newLog.exerciseCalories?.cardio || 0),
+              },
+              hungerLevel: Number(newLog.hungerLevel || 5),
+              energyLevel: Number(newLog.energyLevel || 5),
+              notes: newLog.notes || "",
+            }),
             // Spiritual mode fields
             ...(spiritualModeEnabled && {
               meditations: newLog.meditations || [],
@@ -1531,24 +1539,22 @@
               nofapLabel = "💔 RECAÍDA PMO - DIA PERDIDO";
               nofapIcon = "❌";
             } else if (log.cleanDay === true) {
-              // Score baseado no nível de urge
+              // Dia limpo SEMPRE vale 100 pontos! Label varia pelo nível de urge
               const urgeLevel = log.urgeLevel || 0;
 
+              nofapScore = 100; // DIA LIMPO = 100 PONTOS SEMPRE!
+
               if (urgeLevel >= 8) {
-                nofapScore = 100; // Resistiu a urge extremo
                 nofapLabel = "💪 Resistiu urge forte!";
                 nofapIcon = "💯";
               } else if (urgeLevel >= 5) {
-                nofapScore = 90;
                 nofapLabel = "✅ Controlou urges";
                 nofapIcon = "💪";
               } else if (urgeLevel >= 3) {
-                nofapScore = 80;
                 nofapLabel = "👍 Dia tranquilo";
                 nofapIcon = "✅";
               } else {
-                nofapScore = 70;
-                nofapLabel = "😌 Dia limpo";
+                nofapLabel = "😌 Dia limpo perfeito";
                 nofapIcon = "✅";
               }
             } else {
@@ -1950,10 +1956,32 @@
                           return;
                         }
 
-                        // Se fitness está ativado, vai pro setup do fitness
-                        if (fitnessModeEnabled) {
+                        // Verifica se já tem dados no app (não é primeira vez)
+                        const hasExistingData =
+                          dailyLogs.length > 0 || evaluations.length > 0;
+
+                        // Se fitness está ativado E não tem dados ainda, vai pro setup
+                        if (fitnessModeEnabled && !hasExistingData) {
                           setIsSetupComplete("setup");
                           setShowModuleSelection(false);
+                        }
+                        // Se fitness está ativado MAS já tem dados, pergunta se quer fazer setup
+                        else if (fitnessModeEnabled && hasExistingData) {
+                          const wantsSetup = confirm(
+                            "Você já tem dados no app.\n\n" +
+                              "Deseja fazer o Setup Fitness agora?\n\n" +
+                              "• SIM: Configurar peso, dobras cutâneas e calorias basais\n" +
+                              "• NÃO: Pular o setup e começar a usar (pode fazer depois nas configurações)"
+                          );
+
+                          if (wantsSetup) {
+                            setIsSetupComplete("setup");
+                            setShowModuleSelection(false);
+                          } else {
+                            localStorage.setItem("setupComplete", "true");
+                            setIsSetupComplete(true);
+                            setShowModuleSelection(false);
+                          }
                         } else {
                           // Se fitness não está ativado, pula o setup e vai direto pro app
                           localStorage.setItem("setupComplete", "true");
@@ -1969,9 +1997,7 @@
                       className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-slate-600 disabled:to-slate-600 disabled:cursor-not-allowed px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all transform hover:scale-105 disabled:transform-none"
                     >
                       <CheckCircle2 className="h-6 w-6" />
-                      {fitnessModeEnabled
-                        ? "Continuar para Setup Fitness"
-                        : "Começar a Usar!"}
+                      {fitnessModeEnabled ? "Continuar" : "Começar a Usar!"}
                     </button>
 
                     <button
@@ -2242,7 +2268,21 @@
                         Completar Setup e Começar!
                       </button>
                       <button
-                        onClick={() => setIsSetupComplete(false)}
+                        onClick={() => {
+                          // Se já tem dados (não é primeira vez), pode pular o setup
+                          if (
+                            dailyLogs.length > 0 ||
+                            spiritualModeEnabled ||
+                            nofapModeEnabled
+                          ) {
+                            localStorage.setItem("setupComplete", "true");
+                            setIsSetupComplete(true);
+                            setFitnessModeEnabled(false); // Desativa fitness se cancelou
+                          } else {
+                            // Se é primeira vez, volta pro início
+                            setIsSetupComplete(false);
+                          }
+                        }}
                         className="bg-slate-700 hover:bg-slate-600 px-6 py-4 rounded-xl font-semibold transition-all"
                       >
                         Cancelar
@@ -5773,6 +5813,74 @@
                             Este é um contador simulado que desconta cada dia
                             registrado
                           </div>
+
+                          {/* Estimativa de Gordura Perdida/Ganha */}
+                          {(() => {
+                            const fatKgChange =
+                              simulatedDeficit.accumulated / 7700;
+                            const isGain = fatKgChange < 0;
+                            const absChange = Math.abs(fatKgChange);
+                            const currentWeight =
+                              evaluations.length > 0
+                                ? evaluations[evaluations.length - 1].weight
+                                : 0;
+                            const bfPercentChange =
+                              currentWeight > 0
+                                ? (absChange / currentWeight) * 100
+                                : 0;
+
+                            // Calcula BF% estimado atual
+                            const currentBF = stats.currentBF || 0;
+                            const estimatedCurrentBF = isGain
+                              ? currentBF + bfPercentChange
+                              : currentBF - bfPercentChange;
+
+                            return (
+                              <div
+                                className={`mt-3 pt-3 border-t border-white/10 text-center ${
+                                  isGain ? "text-red-300" : "text-green-300"
+                                }`}
+                              >
+                                <div className="text-xs font-semibold mb-1">
+                                  {isGain
+                                    ? "⚠️ Gordura Ganha (estimado)"
+                                    : "🎉 Gordura Perdida (estimado)"}
+                                </div>
+                                <div className="flex items-center justify-center gap-4 text-sm">
+                                  <div>
+                                    <span className="font-bold">
+                                      {safeFixed(absChange, 2)}
+                                    </span>{" "}
+                                    kg
+                                  </div>
+                                  <div className="text-white/30">•</div>
+                                  <div>
+                                    <span className="font-bold">
+                                      {safeFixed(bfPercentChange, 2)}
+                                    </span>
+                                    % BF
+                                  </div>
+                                </div>
+                                <div className="text-xs text-blue-100/80 mt-2">
+                                  BF% estimado atual:{" "}
+                                  <span className="font-bold text-white">
+                                    {safeFixed(estimatedCurrentBF, 1)}%
+                                  </span>
+                                  {currentBF > 0 && (
+                                    <span className="text-white/50 ml-1">
+                                      (base: {safeFixed(currentBF, 1)}%)
+                                    </span>
+                                  )}
+                                </div>
+                                {isGain && (
+                                  <div className="text-xs text-red-200/70 mt-1">
+                                    Seus déficits negativos estão aumentando a
+                                    gordura!
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </>
                       )}
                     </div>
