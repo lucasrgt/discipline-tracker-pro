@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Body Tracker Pro</title>
+    <title>Discipline Tracker Pro</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -133,7 +133,7 @@
             </svg>
         );
 
-        function BodyTracker() {
+        function DisciplineTracker() {
             const [activeTab, setActiveTab] = useState(() => {
                 // Define aba inicial baseado nos módulos ativos
                 const savedFitnessMode = localStorage.getItem('fitnessModeEnabled');
@@ -402,6 +402,30 @@
                 localStorage.setItem('nofapLogs', JSON.stringify(nofapLogs));
             }, [nofapLogs]);
 
+            // Auto-redirect to correct tab based on enabled modules
+            useEffect(() => {
+                // Ordem de prioridade: Fitness > Spiritual > NoFap
+                const fitnessTab = fitnessModeEnabled ? 'dashboard' : null;
+                const spiritualTab = spiritualModeEnabled ? 'spiritual' : null;
+                const nofapTab = nofapModeEnabled ? 'nofap' : null;
+                
+                const firstAvailableTab = fitnessTab || spiritualTab || nofapTab;
+                
+                // Se a aba atual não está disponível, redireciona
+                // Logs está sempre disponível para qualquer módulo ativo
+                const currentTabIsValid = 
+                    (activeTab === 'dashboard' && fitnessModeEnabled) ||
+                    (activeTab === 'evaluations' && fitnessModeEnabled) ||
+                    (activeTab === 'logs' && (fitnessModeEnabled || spiritualModeEnabled || nofapModeEnabled)) ||
+                    (activeTab === 'charts' && fitnessModeEnabled) ||
+                    (activeTab === 'spiritual' && spiritualModeEnabled) ||
+                    (activeTab === 'nofap' && nofapModeEnabled);
+                
+                if (!currentTabIsValid && firstAvailableTab) {
+                    setActiveTab(firstAvailableTab);
+                }
+            }, [activeTab, fitnessModeEnabled, spiritualModeEnabled, nofapModeEnabled]);
+
             // Export data to JSON
             const exportData = () => {
                 const data = {
@@ -409,6 +433,7 @@
                     dailyLogs,
                     basalCalories,
                     targetBodyFat,
+                    fitnessModeEnabled,
                     spiritualModeEnabled,
                     nofapModeEnabled,
                     spiritualLogs,
@@ -421,7 +446,7 @@
                 const url = URL.createObjectURL(dataBlob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `body-tracker-backup-${getLocalDateString()}.json`;
+                link.download = `discipline-tracker-backup-${getLocalDateString()}.json`;
                 link.click();
                 URL.revokeObjectURL(url);
             };
@@ -439,6 +464,7 @@
                         if (data.dailyLogs) setDailyLogs(data.dailyLogs);
                         if (data.basalCalories) setBasalCalories(data.basalCalories);
                         if (data.targetBodyFat) setTargetBodyFat(data.targetBodyFat);
+                        if (data.fitnessModeEnabled !== undefined) setFitnessModeEnabled(data.fitnessModeEnabled);
                         if (data.spiritualModeEnabled !== undefined) setSpiritualModeEnabled(data.spiritualModeEnabled);
                         if (data.nofapModeEnabled !== undefined) setNofapModeEnabled(data.nofapModeEnabled);
                         if (data.spiritualLogs) setSpiritualLogs(data.spiritualLogs);
@@ -1072,19 +1098,19 @@
             const simulatedDeficit = getSimulatedDeficit();
 
             // Welcome Screen for new users
-            if (!isSetupComplete && !showImportOnWelcome) {
+            if (!isSetupComplete && !showImportOnWelcome && !showModuleSelection) {
                 return (
                     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 flex items-center justify-center">
                         <div className="max-w-2xl w-full">
                             <div className="text-center mb-8">
                                 <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                                    Body Tracker Pro
+                                    Discipline Tracker Pro
                                 </h1>
                                 <p className="text-2xl text-slate-300 mb-2">Bem-vindo! 💪</p>
                                 <p className="text-slate-400">Vamos começar sua jornada rumo aos seus objetivos de gordura corporal</p>
                             </div>
 
-                            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-8 border border-slate-700 shadow-2xl">
+                            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-8 border-2 border-slate-700 shadow-2xl">
                                 <div className="flex items-center justify-center mb-6">
                                     <Target className="h-16 w-16 text-blue-400" />
                                 </div>
@@ -1131,7 +1157,7 @@
                                 <p className="text-slate-400">Importe seu arquivo de backup JSON</p>
                             </div>
 
-                            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-8 border border-slate-700 shadow-2xl">
+                            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-8 border-2 border-slate-700 shadow-2xl">
                                 <div className="flex items-center justify-center mb-6">
                                     <Upload className="h-16 w-16 text-green-400" />
                                 </div>
@@ -1179,7 +1205,7 @@
                                 <p className="text-slate-400">Selecione quais áreas você quer acompanhar</p>
                             </div>
 
-                            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-8 border border-slate-700 shadow-2xl">
+                            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-8 border-2 border-slate-700 shadow-2xl">
                                 <div className="space-y-4">
                                     {/* Fitness Module */}
                                     <div 
@@ -1293,7 +1319,7 @@
                                 {/* Action Buttons */}
                                 <div className="mt-8 space-y-3">
                                     {(!fitnessModeEnabled && !spiritualModeEnabled && !nofapModeEnabled) && (
-                                        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3 text-center">
+                                        <div className="bg-yellow-900/20 border-2 border-yellow-500/30 rounded-lg p-3 text-center">
                                             <p className="text-sm text-yellow-300">⚠️ Selecione pelo menos um módulo para continuar</p>
                                         </div>
                                     )}
@@ -1352,7 +1378,7 @@
                                 <p className="text-slate-400">Vamos configurar seus dados para começar o tracking</p>
                             </div>
 
-                            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-8 border border-slate-700 shadow-2xl">
+                            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-8 border-2 border-slate-700 shadow-2xl">
                                 <div className="space-y-8">
                                     {/* Basic Info */}
                                     <div>
@@ -1367,7 +1393,7 @@
                                                     type="date"
                                                     value={setupData.date}
                                                     onChange={(e) => setSetupData({...setupData, date: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
                                                 />
                                             </div>
                                             <div>
@@ -1377,7 +1403,7 @@
                                                     step="0.1"
                                                     value={setupData.weight}
                                                     onChange={(e) => setSetupData({...setupData, weight: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
                                                     placeholder="Ex: 80.5"
                                                 />
                                             </div>
@@ -1387,7 +1413,7 @@
                                                     type="number"
                                                     value={setupData.basalCalories}
                                                     onChange={(e) => setSetupData({...setupData, basalCalories: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
                                                     placeholder="Ex: 2300"
                                                 />
                                             </div>
@@ -1398,7 +1424,7 @@
                                                     step="0.1"
                                                     value={setupData.targetBodyFat}
                                                     onChange={(e) => setSetupData({...setupData, targetBodyFat: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
                                                     placeholder="Ex: 10"
                                                 />
                                             </div>
@@ -1425,7 +1451,7 @@
                                                     step="0.1"
                                                     value={setupData.triceps}
                                                     onChange={(e) => setSetupData({...setupData, triceps: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                     placeholder="Ex: 14.5"
                                                 />
                                             </div>
@@ -1436,7 +1462,7 @@
                                                     step="0.1"
                                                     value={setupData.subscapular}
                                                     onChange={(e) => setSetupData({...setupData, subscapular: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                     placeholder="Ex: 15.2"
                                                 />
                                             </div>
@@ -1447,7 +1473,7 @@
                                                     step="0.1"
                                                     value={setupData.chest}
                                                     onChange={(e) => setSetupData({...setupData, chest: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                     placeholder="Ex: 7.8"
                                                 />
                                             </div>
@@ -1458,7 +1484,7 @@
                                                     step="0.1"
                                                     value={setupData.midaxillary}
                                                     onChange={(e) => setSetupData({...setupData, midaxillary: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                     placeholder="Ex: 11.3"
                                                 />
                                             </div>
@@ -1469,7 +1495,7 @@
                                                     step="0.1"
                                                     value={setupData.abdominal}
                                                     onChange={(e) => setSetupData({...setupData, abdominal: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                     placeholder="Ex: 22.7"
                                                 />
                                             </div>
@@ -1480,7 +1506,7 @@
                                                     step="0.1"
                                                     value={setupData.suprailiac}
                                                     onChange={(e) => setSetupData({...setupData, suprailiac: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                     placeholder="Ex: 21.4"
                                                 />
                                             </div>
@@ -1491,7 +1517,7 @@
                                                     step="0.1"
                                                     value={setupData.thigh}
                                                     onChange={(e) => setSetupData({...setupData, thigh: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                     placeholder="Ex: 26.9"
                                                 />
                                             </div>
@@ -1542,7 +1568,7 @@
                                     </button>
                                 </div>
                                 <p className="text-sm text-purple-200 mb-4">
-                                    💡 Dica: Clique 5 vezes no título "Body Tracker Pro" para ativar/desativar este painel
+                                    💡 Dica: Clique 5 vezes no título "Discipline Tracker Pro" para ativar/desativar este painel
                                 </p>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1577,7 +1603,7 @@
                                     {/* Quick Actions */}
                                     <div className="bg-slate-800/50 rounded-lg p-4">
                                         <h3 className="font-bold mb-3 text-purple-300">⚡ Ações Rápidas de Teste</h3>
-                                        <p className="text-xs text-yellow-300 mb-3 bg-yellow-900/20 p-2 rounded border border-yellow-700/30">
+                                        <p className="text-xs text-yellow-300 mb-3 bg-yellow-900/20 p-2 rounded border-2 border-yellow-700/30">
                                             ⚠️ Dados de teste são TEMPORÁRIOS e aparecem apenas na sessão atual. Recarregue a página para limpar.
                                         </p>
                                         <div className="space-y-3">
@@ -2648,7 +2674,7 @@
                                                         window.location.reload();
                                                     }
                                                 }}
-                                                className="w-full bg-slate-600 hover:bg-slate-700 px-4 py-2 rounded-lg font-semibold transition-all text-sm border border-slate-500"
+                                                className="w-full bg-slate-600 hover:bg-slate-700 px-4 py-2 rounded-lg font-semibold transition-all text-sm border-2 border-slate-500"
                                             >
                                                 🔄 Recarregar e Limpar Dados de Teste
                                             </button>
@@ -2691,7 +2717,7 @@
                                     {/* Modal Content */}
                                     <div className="p-6 space-y-6">
                                         {/* Goals Section */}
-                                        <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+                                        <div className="bg-slate-800/50 rounded-xl p-6 border-2 border-slate-700">
                                             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                                                 <Target className="h-6 w-6 text-blue-400" />
                                                 Metas & Configurações
@@ -2708,7 +2734,7 @@
                                                             type="number"
                                                             value={basalCalories}
                                                             onChange={(e) => setBasalCalories(Number(e.target.value))}
-                                                            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
+                                                            className="flex-1 bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
                                                             placeholder="2300"
                                                         />
                                                         <span className="text-slate-400 font-semibold">kcal/dia</span>
@@ -2728,7 +2754,7 @@
                                                             max="25"
                                                             value={targetBodyFat}
                                                             onChange={(e) => setTargetBodyFat(Number(e.target.value))}
-                                                            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
+                                                            className="flex-1 bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
                                                             placeholder="6.0"
                                                         />
                                                         <span className="text-slate-400 font-semibold">% gordura</span>
@@ -2747,7 +2773,7 @@
                                             
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 {/* Fitness Mode Toggle */}
-                                                <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-600">
+                                                <div className="bg-slate-800/50 rounded-lg p-5 border-2 border-slate-600">
                                                     <div className="flex items-center justify-between mb-3">
                                                         <div className="flex items-center gap-3">
                                                             <span className="text-3xl">💪</span>
@@ -2758,10 +2784,32 @@
                                                         </div>
                                                         <button
                                                             onClick={() => {
+                                                                // Verifica se é o único módulo ativo
                                                                 if (fitnessModeEnabled && !spiritualModeEnabled && !nofapModeEnabled) {
                                                                     alert('⚠️ Você precisa ter pelo menos um módulo ativo!');
                                                                     return;
                                                                 }
+                                                                
+                                                                // Se está ATIVANDO o fitness, verifica se tem dados
+                                                                if (!fitnessModeEnabled) {
+                                                                    // Verifica se tem pelo menos uma avaliação física
+                                                                    if (evaluations.length === 0 || !basalCalories || !targetBodyFat) {
+                                                                        const confirmed = confirm(
+                                                                            '⚠️ SETUP NECESSÁRIO\n\n' +
+                                                                            'O módulo Fitness requer dados iniciais (peso, dobras, calorias basais, meta de BF%).\n\n' +
+                                                                            'Você será redirecionado para o Setup Inicial.\n\n' +
+                                                                            'Deseja continuar?'
+                                                                        );
+                                                                        
+                                                                        if (confirmed) {
+                                                                            setFitnessModeEnabled(true);
+                                                                            setShowSettingsModal(false);
+                                                                            setIsSetupComplete('setup');
+                                                                        }
+                                                                        return;
+                                                                    }
+                                                                }
+                                                                
                                                                 setFitnessModeEnabled(!fitnessModeEnabled);
                                                                 // Se desativar fitness, muda pra primeira aba disponível
                                                                 if (fitnessModeEnabled) {
@@ -2784,7 +2832,7 @@
                                                 </div>
 
                                                 {/* Spiritual Mode Toggle */}
-                                                <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-600">
+                                                <div className="bg-slate-800/50 rounded-lg p-5 border-2 border-slate-600">
                                                     <div className="flex items-center justify-between mb-3">
                                                         <div className="flex items-center gap-3">
                                                             <span className="text-3xl">🧘</span>
@@ -2816,7 +2864,7 @@
                                                 </div>
 
                                                 {/* NoFap Mode Toggle */}
-                                                <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-600">
+                                                <div className="bg-slate-800/50 rounded-lg p-5 border-2 border-slate-600">
                                                     <div className="flex items-center justify-between mb-3">
                                                         <div className="flex items-center gap-3">
                                                             <span className="text-3xl">🎯</span>
@@ -2934,7 +2982,7 @@
                                 onClick={handleTitleClick}
                                 className="text-5xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent select-none"
                             >
-                                Body Tracker Pro
+                                Discipline Tracker Pro
                             </h1>
                             <p className="text-slate-400">Sua jornada rumo aos {targetBodyFat}% de gordura corporal</p>
                             
@@ -2987,17 +3035,6 @@
                                         Avaliações Físicas
                                     </button>
                                     <button
-                                        onClick={() => setActiveTab('logs')}
-                                        className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
-                                            activeTab === 'logs' 
-                                                ? 'bg-blue-600 text-white shadow-lg' 
-                                                : 'text-slate-400 hover:text-white hover:bg-slate-700'
-                                        }`}
-                                    >
-                                        <Calendar className="inline mr-2 h-5 w-5" />
-                                        Registro Diário
-                                    </button>
-                                    <button
                                         onClick={() => setActiveTab('charts')}
                                         className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
                                             activeTab === 'charts' 
@@ -3010,6 +3047,17 @@
                                     </button>
                                 </>
                             )}
+                            <button
+                                onClick={() => setActiveTab('logs')}
+                                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
+                                    activeTab === 'logs' 
+                                        ? 'bg-blue-600 text-white shadow-lg' 
+                                        : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                }`}
+                            >
+                                <Calendar className="inline mr-2 h-5 w-5" />
+                                Registro Diário
+                            </button>
                             {spiritualModeEnabled && (
                                 <button
                                     onClick={() => setActiveTab('spiritual')}
@@ -3037,7 +3085,7 @@
                         </div>
 
                         {/* Dashboard Tab */}
-                        {activeTab === 'dashboard' && (
+                        {activeTab === 'dashboard' && fitnessModeEnabled && (
                             <div className="space-y-6">
                                 {/* Snake Diet Banner */}
                                 <a 
@@ -3309,7 +3357,7 @@
                                                             
                                                             {/* Tooltip on hover */}
                                                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                                                                <div className="bg-slate-900 text-white text-xs rounded-lg p-3 shadow-2xl border border-slate-700 whitespace-nowrap">
+                                                                <div className="bg-slate-900 text-white text-xs rounded-lg p-3 shadow-2xl border-2 border-slate-700 whitespace-nowrap">
                                                                     <div className="font-bold mb-1 flex items-center gap-2">
                                                                         {new Date(day.date).toLocaleDateString('pt-BR')}
                                                                         {day.isToday && <span className="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full">HOJE</span>}
@@ -3349,7 +3397,7 @@
                                                 if (logsInView.length === 0) return null;
                                                 
                                                 return (
-                                                    <div className="mb-4 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                                                    <div className="mb-4 p-3 bg-slate-700/30 rounded-lg border-2 border-slate-600">
                                                         <div className="flex items-center justify-between text-sm">
                                                             <div className="text-slate-300">
                                                                 <span className="font-semibold">{logsInView.length}</span> dias registrados neste período
@@ -3397,7 +3445,7 @@
                                                     <span className="text-slate-300">Sem registro</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-4 h-4 rounded bg-slate-800/50 border border-slate-600"></div>
+                                                    <div className="w-4 h-4 rounded bg-slate-800/50 border-2 border-slate-600"></div>
                                                     <span className="text-slate-300">Futuro</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -3418,7 +3466,7 @@
                                     if (alert.canDismiss && dismissedGoodAlert) return null;
                                     
                                     return (
-                                        <div className={`${alert.color} rounded-2xl p-6 shadow-2xl border-4 ${alert.border} ${alert.canDismiss ? '' : ''} relative`}>
+                                        <div className={`${alert.color} rounded-2xl p-6 shadow-2xl border-2 ${alert.border} ${alert.canDismiss ? '' : ''} relative`}>
                                             {/* Botão de fechar apenas para alertas bons */}
                                             {alert.canDismiss && (
                                                 <button
@@ -3538,7 +3586,7 @@
                                 {/* Stats Grid - Row 1 */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {/* Current BF% */}
-                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-lg font-semibold text-slate-300">BF% Atual</h3>
                                             <TrendingDown className="h-6 w-6 text-blue-400" />
@@ -3551,7 +3599,7 @@
                                     </div>
 
                                     {/* Fat to Lose */}
-                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-lg font-semibold text-slate-300">Gordura a Perder</h3>
                                             <Scale className="h-6 w-6 text-purple-400" />
@@ -3568,7 +3616,7 @@
                                     </div>
 
                                     {/* Total Skinfolds */}
-                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-lg font-semibold text-slate-300">Soma das 7 Dobras</h3>
                                             <Ruler className="h-6 w-6 text-cyan-400" />
@@ -3606,7 +3654,7 @@
                                 {/* Stats Grid - Row 2 */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {/* Weekly Deficit */}
-                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-lg font-semibold text-slate-300">Deficit Últimos 7 Dias</h3>
                                             <Flame className="h-6 w-6 text-orange-400" />
@@ -3623,7 +3671,7 @@
                                     </div>
 
                                     {/* Progress Percentage */}
-                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-lg font-semibold text-slate-300">Progresso Semanal</h3>
                                             <Award className="h-6 w-6 text-yellow-400" />
@@ -3641,7 +3689,7 @@
                                     </div>
 
                                     {/* Fasting Days */}
-                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-lg font-semibold text-slate-300">Dias de Jejum</h3>
                                             <Flame className="h-6 w-6 text-indigo-400" />
@@ -3664,7 +3712,7 @@
                                         const leanMass = latestEval.weight * (1 - latestBF / 100);
                                         
                                         return (
-                                            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                                 <div className="flex items-center justify-between mb-4">
                                                     <h3 className="text-lg font-semibold text-slate-300">Massa Magra</h3>
                                                     <Activity className="h-6 w-6 text-purple-400" />
@@ -3685,7 +3733,7 @@
 
                                 {/* Latest Evaluation */}
                                 {evaluations.length > 0 && (
-                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                         <h3 className="text-xl font-bold mb-4 flex items-center">
                                             <Award className="mr-2 h-6 w-6 text-yellow-400" />
                                             Última Avaliação
@@ -3727,24 +3775,24 @@
                                     const protein = calculateProteinNeeds(leanMass);
                                     
                                     return (
-                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                             <h3 className="text-xl font-bold mb-4 flex items-center">
                                                 <Beef className="mr-2 h-7 w-7 text-orange-400" />
                                                 Necessidade de Proteína Diária
                                             </h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="bg-red-600/20 rounded-lg p-4 border border-red-500/30">
+                                                <div className="bg-red-600/20 rounded-lg p-4 border-2 border-red-500/30">
                                                     <div className="text-sm text-red-300 mb-2 font-semibold">MÍNIMO (1.6g/kg massa magra)</div>
                                                     <div className="text-4xl font-bold text-red-400">{protein.minimum}g</div>
                                                     <div className="text-xs text-red-300/70 mt-2">Para evitar perda muscular</div>
                                                 </div>
-                                                <div className="bg-green-600/20 rounded-lg p-4 border border-green-500/30">
+                                                <div className="bg-green-600/20 rounded-lg p-4 border-2 border-green-500/30">
                                                     <div className="text-sm text-green-300 mb-2 font-semibold">IDEAL (2g/kg massa magra)</div>
                                                     <div className="text-4xl font-bold text-green-400">{protein.ideal}g</div>
                                                     <div className="text-xs text-green-300/70 mt-2">Para máxima preservação/ganho</div>
                                                 </div>
                                             </div>
-                                            <div className="mt-4 p-3 bg-yellow-600/20 rounded-lg border border-yellow-500/30">
+                                            <div className="mt-4 p-3 bg-yellow-600/20 rounded-lg border-2 border-yellow-500/30">
                                                 <p className="text-sm text-yellow-300">
                                                     💪 <strong>Dica:</strong> Baseado em {safeFixed(leanMass, 1)} kg de massa magra. Mantenha a proteína alta para preservar músculo!
                                                 </p>
@@ -3760,13 +3808,13 @@
                                     const changeIcon = muscleData.change > 0 ? '📈' : muscleData.change < 0 ? '📉' : '➡️';
                                     
                                     return (
-                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                             <h3 className="text-xl font-bold mb-4 flex items-center">
                                                 <TrendingUp className="mr-2 h-6 w-6 text-purple-400" />
                                                 Mudança de Composição Corporal
                                             </h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                                <div className="bg-purple-600/20 rounded-lg p-4 border border-purple-500/30">
+                                                <div className="bg-purple-600/20 rounded-lg p-4 border-2 border-purple-500/30">
                                                     <div className="text-sm text-purple-300 mb-2">Massa Muscular</div>
                                                     <div className={`text-3xl font-bold ${changeColor}`}>
                                                         {changeIcon} {muscleData.change > 0 ? '+' : ''}{safeFixed(muscleData.change, 2)} kg
@@ -3842,7 +3890,7 @@
                                                         );
                                                     })()}
                                                 </div>
-                                                <div className="bg-blue-600/20 rounded-lg p-4 border border-blue-500/30">
+                                                <div className="bg-blue-600/20 rounded-lg p-4 border-2 border-blue-500/30">
                                                     <div className="text-sm text-blue-300 mb-2">Gordura Perdida</div>
                                                     <div className="text-3xl font-bold text-blue-400">
                                                         {(() => {
@@ -4146,7 +4194,7 @@
                                                 ))}
                                             </div>
                                             
-                                            <div className="mt-4 p-3 bg-indigo-950/50 rounded-lg border border-indigo-700/30">
+                                            <div className="mt-4 p-3 bg-indigo-950/50 rounded-lg border-2 border-indigo-700/30">
                                                 <p className="text-xs text-indigo-300">
                                                     💡 Esses insights são gerados automaticamente baseados em machine learning simples aplicado aos seus dados. Quanto mais você registrar, mais preciso fica!
                                                 </p>
@@ -4383,12 +4431,12 @@
                                                                     {issue.severity === 'success' && <span className="text-green-400">{issue.icon2}</span>}
                                                                 </h3>
                                                                 
-                                                                <div className="bg-black/30 rounded-lg p-3 mb-3 border border-white/10">
+                                                                <div className="bg-black/30 rounded-lg p-3 mb-3 border-2 border-white/10">
                                                                     <p className="text-sm font-semibold text-red-300 mb-1">❌ PROBLEMA:</p>
                                                                     <p className="text-sm text-slate-200">{issue.problem}</p>
                                                                 </div>
                                                                 
-                                                                <div className="bg-black/30 rounded-lg p-3 border border-white/10">
+                                                                <div className="bg-black/30 rounded-lg p-3 border-2 border-white/10">
                                                                     <p className="text-sm font-semibold text-green-300 mb-1">✅ SOLUÇÃO:</p>
                                                                     <p className="text-sm text-slate-200">{issue.solution}</p>
                                                                 </div>
@@ -4398,7 +4446,7 @@
                                                 ))}
                                             </div>
                                             
-                                            <div className="mt-6 p-4 bg-slate-950/50 rounded-lg border border-slate-700">
+                                            <div className="mt-6 p-4 bg-slate-950/50 rounded-lg border-2 border-slate-700">
                                                 <p className="text-xs text-slate-400">
                                                     💡 <strong>Sobre este relatório:</strong> Analisamos os últimos {Math.min(dailyLogs.length, 30)} dias usando 
                                                     algoritmos de detecção de padrões. Quanto mais dados, mais preciso fica. Só aparecem problemas REAIS detectados 
@@ -4414,7 +4462,7 @@
                         )}
 
                         {/* Evaluations Tab */}
-                        {activeTab === 'evaluations' && (
+                        {activeTab === 'evaluations' && fitnessModeEnabled && (
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center">
                                     <h2 className="text-2xl font-bold">Avaliações Físicas</h2>
@@ -4429,7 +4477,7 @@
 
                                 {/* Add Evaluation Form */}
                                 {showAddEval && (
-                                    <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+                                    <div className="bg-slate-800 rounded-xl p-6 border-2 border-slate-700">
                                         <h3 className="text-xl font-bold mb-4">{editingEval ? 'Editar Avaliação' : 'Nova Avaliação'}</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                             <div>
@@ -4438,7 +4486,7 @@
                                                     type="date"
                                                     value={newEval.date}
                                                     onChange={(e) => setNewEval({...newEval, date: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                 />
                                             </div>
                                             <div>
@@ -4448,7 +4496,7 @@
                                                     step="0.1"
                                                     value={newEval.weight}
                                                     onChange={(e) => setNewEval({...newEval, weight: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                     placeholder="80.5"
                                                 />
                                             </div>
@@ -4462,7 +4510,7 @@
                                                     step="0.1"
                                                     value={newEval.triceps}
                                                     onChange={(e) => setNewEval({...newEval, triceps: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                 />
                                             </div>
                                             <div>
@@ -4472,7 +4520,7 @@
                                                     step="0.1"
                                                     value={newEval.subscapular}
                                                     onChange={(e) => setNewEval({...newEval, subscapular: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                 />
                                             </div>
                                             <div>
@@ -4482,7 +4530,7 @@
                                                     step="0.1"
                                                     value={newEval.chest}
                                                     onChange={(e) => setNewEval({...newEval, chest: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                 />
                                             </div>
                                             <div>
@@ -4492,7 +4540,7 @@
                                                     step="0.1"
                                                     value={newEval.midaxillary}
                                                     onChange={(e) => setNewEval({...newEval, midaxillary: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                 />
                                             </div>
                                             <div>
@@ -4502,7 +4550,7 @@
                                                     step="0.1"
                                                     value={newEval.abdominal}
                                                     onChange={(e) => setNewEval({...newEval, abdominal: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                 />
                                             </div>
                                             <div>
@@ -4512,7 +4560,7 @@
                                                     step="0.1"
                                                     value={newEval.suprailiac}
                                                     onChange={(e) => setNewEval({...newEval, suprailiac: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                 />
                                             </div>
                                             <div>
@@ -4522,7 +4570,7 @@
                                                     step="0.1"
                                                     value={newEval.thigh}
                                                     onChange={(e) => setNewEval({...newEval, thigh: e.target.value})}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                    className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                 />
                                             </div>
                                         </div>
@@ -4555,7 +4603,7 @@
                                 {/* Evaluations List */}
                                 <div className="space-y-3">
                                     {evaluations.sort((a, b) => new Date(b.date) - new Date(a.date)).map((eval_item) => (
-                                        <div key={eval_item.id} className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+                                        <div key={eval_item.id} className="bg-slate-800 rounded-xl p-6 border-2 border-slate-700">
                                             <div className="flex justify-between items-start mb-4">
                                                 <div>
                                                     <div className="text-2xl font-bold text-blue-400">
@@ -4640,7 +4688,7 @@
                                 </div>
 
                                 {/* Navegação de Mês/Ano */}
-                                <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                                <div className="bg-slate-800/50 rounded-lg p-4 border-2 border-slate-700">
                                     <div className="flex items-center justify-between">
                                         <button
                                             onClick={() => {
@@ -4702,7 +4750,7 @@
 
                                 {/* Add Log Form */}
                                 {showAddLog && (
-                                    <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+                                    <div className="bg-slate-800 rounded-xl p-6 border-2 border-slate-700">
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className="text-xl font-bold">{editingLog ? 'Editar Registro' : 'Novo Registro'}</h3>
                                             <div className="flex items-center gap-2">
@@ -4711,12 +4759,13 @@
                                                     type="date"
                                                     value={newLog.date}
                                                     onChange={(e) => setNewLog({...newLog, date: e.target.value})}
-                                                    className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm"
+                                                    className="bg-slate-700 border-2 border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm"
                                                 />
                                             </div>
                                         </div>
 
                                         {/* ========== SEÇÃO FITNESS: NUTRIÇÃO & EXERCÍCIOS ========== */}
+                                        {fitnessModeEnabled && (
                                         <div className="mb-4 border-2 border-blue-500/40 rounded-xl overflow-hidden">
                                             <div className="bg-gradient-to-r from-blue-900/50 to-cyan-900/50 p-4 border-b border-blue-500/30">
                                                 <h4 className="text-lg font-bold text-blue-300 flex items-center gap-2">
@@ -4734,14 +4783,14 @@
                                                         value={newLog.calories}
                                                         onChange={(e) => setNewLog({...newLog, calories: e.target.value})}
                                                         disabled={newLog.isFasting}
-                                                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                                         placeholder="1800"
                                                     />
                                                 </div>
 
                                                 {/* Fasting & Refeed Checkboxes */}
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="p-4 bg-indigo-900/20 border border-indigo-700/30 rounded-lg">
+                                                    <div className="p-4 bg-indigo-900/20 border-2 border-indigo-700/30 rounded-lg">
                                                 <label className="flex items-center gap-3 cursor-pointer">
                                                     <input
                                                         type="checkbox"
@@ -4827,7 +4876,7 @@
                                                                 strength: e.target.value
                                                             }
                                                         })}
-                                                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                        className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                         placeholder="200"
                                                         min="0"
                                                     />
@@ -4850,7 +4899,7 @@
                                                                 cardio: e.target.value
                                                             }
                                                         })}
-                                                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                        className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white"
                                                         placeholder="300"
                                                         min="0"
                                                     />
@@ -4859,13 +4908,13 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="mt-3 p-3 bg-yellow-600/10 border border-yellow-600/20 rounded-lg">
+                                            <div className="mt-3 p-3 bg-yellow-600/10 border-2 border-yellow-600/20 rounded-lg">
                                                 <p className="text-xs text-yellow-300">
                                                     💡 <strong>Dica:</strong> Seja conservador nas estimativas! É melhor subestimar do que superestimar o gasto calórico. Use apps de fitness, relógios ou calculadoras online como referência.
                                                 </p>
                                             </div>
                                             {(newLog.exerciseCalories?.strength || newLog.exerciseCalories?.cardio) && (
-                                                <div className="mt-3 p-3 bg-green-600/20 border border-green-600/30 rounded-lg">
+                                                <div className="mt-3 p-3 bg-green-600/20 border-2 border-green-600/30 rounded-lg">
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-sm text-green-300 font-semibold">Total queimado em exercícios:</span>
                                                         <span className="text-lg text-green-400 font-bold">
@@ -4880,8 +4929,10 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        )}
 
                                         {/* ========== SEÇÃO WELLNESS: BEM-ESTAR ========== */}
+                                        {fitnessModeEnabled && (
                                         <div className="mb-4 border-2 border-purple-500/40 rounded-xl overflow-hidden">
                                             <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-4 border-b border-purple-500/30">
                                                 <h4 className="text-lg font-bold text-purple-300 flex items-center gap-2">
@@ -4941,13 +4992,14 @@
                                                     <textarea
                                                         value={newLog.notes}
                                                         onChange={(e) => setNewLog({...newLog, notes: e.target.value})}
-                                                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white text-sm"
+                                                        className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white text-sm"
                                                         placeholder="Como foi o dia? Alguma dificuldade? Sentiu vontade de comer algo específico?"
                                                         rows="2"
                                                     />
                                                 </div>
                                             </div>
                                         </div>
+                                        )}
 
                                         {/* ========== SEÇÃO SPIRITUAL: JORNADA ESPIRITUAL ========== */}
                                         {spiritualModeEnabled && (
@@ -4989,26 +5041,26 @@
                                                                 {isComplete && <span className="text-green-400 font-bold text-xs">✅ COMPLETO</span>}
                                                             </div>
                                                             <div className="space-y-2 text-xs">
-                                                                <div className={`flex items-center gap-2 p-2 rounded ${hasLimpeza ? 'bg-green-900/30 border border-green-500/30' : 'bg-slate-700/30'}`}>
+                                                                <div className={`flex items-center gap-2 p-2 rounded ${hasLimpeza ? 'bg-green-900/30 border-2 border-green-500/30' : 'bg-slate-700/30'}`}>
                                                                     <span>{hasLimpeza ? '✅' : '⭕'}</span>
                                                                     <span className="text-white">🧼 Limpeza Própria (diária)</span>
                                                                 </div>
-                                                                <div className={`flex items-center gap-2 p-2 rounded ${hasProtecao ? 'bg-green-900/30 border border-green-500/30' : 'bg-slate-700/30'}`}>
+                                                                <div className={`flex items-center gap-2 p-2 rounded ${hasProtecao ? 'bg-green-900/30 border-2 border-green-500/30' : 'bg-slate-700/30'}`}>
                                                                     <span>{hasProtecao ? '✅' : '⭕'}</span>
                                                                     <span className="text-white">🛡️ Proteção (diária)</span>
                                                                 </div>
-                                                                <div className={`flex items-center gap-2 p-2 rounded ${hasConexao ? 'bg-green-900/30 border border-green-500/30' : 'bg-slate-700/30'}`}>
+                                                                <div className={`flex items-center gap-2 p-2 rounded ${hasConexao ? 'bg-green-900/30 border-2 border-green-500/30' : 'bg-slate-700/30'}`}>
                                                                     <span>{hasConexao ? '✅' : '⭕'}</span>
                                                                     <span className="text-white">✨ Conexão (diária)</span>
                                                                 </div>
                                                                 {isSunday && !isFirstSunday && (
-                                                                    <div className={`flex items-center gap-2 p-2 rounded ${hasLimpezaAmbiente ? 'bg-yellow-900/30 border border-yellow-500/30' : 'bg-slate-700/30'}`}>
+                                                                    <div className={`flex items-center gap-2 p-2 rounded ${hasLimpezaAmbiente ? 'bg-yellow-900/30 border-2 border-yellow-500/30' : 'bg-slate-700/30'}`}>
                                                                         <span>{hasLimpezaAmbiente ? '✅' : '⭕'}</span>
                                                                         <span className="text-yellow-200">� Domingo: Limpeza do Ambiente (semanal)</span>
                                                                     </div>
                                                                 )}
                                                                 {isFirstSunday && (
-                                                                    <div className={`flex items-center gap-2 p-2 rounded ${hasConsagracao ? 'bg-pink-900/30 border border-pink-500/30' : 'bg-slate-700/30'}`}>
+                                                                    <div className={`flex items-center gap-2 p-2 rounded ${hasConsagracao ? 'bg-pink-900/30 border-2 border-pink-500/30' : 'bg-slate-700/30'}`}>
                                                                         <span>{hasConsagracao ? '✅' : '⭕'}</span>
                                                                         <span className="text-pink-200">💎 Primeiro Domingo: Consagração de Cristais (mensal)</span>
                                                                     </div>
@@ -5029,7 +5081,7 @@
                                                 })()}
                                                 
                                                 {/* Meditações do Dia */}
-                                                <div className="mb-4 p-4 bg-slate-800/40 rounded-lg border border-purple-500/20">
+                                                <div className="mb-4 p-4 bg-slate-800/40 rounded-lg border-2 border-purple-500/20">
                                                     <div className="flex items-center justify-between mb-3">
                                                         <h5 className="text-sm font-bold text-purple-200">🧘‍♂️ Meditações do Dia ({newLog.meditations.length})</h5>
                                                     </div>
@@ -5067,7 +5119,7 @@
                                                         <select
                                                             value={newMeditation.type}
                                                             onChange={(e) => setNewMeditation({...newMeditation, type: e.target.value})}
-                                                            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="bg-slate-700 border-2 border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                                                         >
                                                             <option value="limpeza-propria">🧼 Limpeza Própria</option>
                                                             <option value="limpeza-ambiente">🏠 Limpeza Ambiente</option>
@@ -5079,7 +5131,7 @@
                                                             type="number"
                                                             value={newMeditation.minutes}
                                                             onChange={(e) => setNewMeditation({...newMeditation, minutes: e.target.value})}
-                                                            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="bg-slate-700 border-2 border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                                                             placeholder="Minutos"
                                                             min="1"
                                                         />
@@ -5103,58 +5155,82 @@
                                                     </div>
                                                 </div>
                                                 
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                                    
-                                                    <label className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-700/50 transition-all">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={newLog.gratitude}
-                                                            onChange={(e) => setNewLog({...newLog, gratitude: e.target.checked})}
-                                                            className="w-5 h-5 rounded border-slate-600 text-green-600"
-                                                        />
-                                                        <span className="text-white font-semibold">🙏 Pratiquei gratidão</span>
-                                                    </label>
-                                                    
-                                                    <label className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-700/50 transition-all">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={newLog.judgedOthers}
-                                                            onChange={(e) => setNewLog({...newLog, judgedOthers: e.target.checked})}
-                                                            className="w-5 h-5 rounded border-slate-600 text-red-600"
-                                                        />
-                                                        <span className="text-white font-semibold">⚖️ Julguei outras pessoas</span>
-                                                    </label>
-                                                    
-                                                    <label className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-700/50 transition-all">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={newLog.charity}
-                                                            onChange={(e) => setNewLog({...newLog, charity: e.target.checked})}
-                                                            className="w-5 h-5 rounded border-slate-600 text-yellow-600"
-                                                        />
-                                                        <span className="text-white font-semibold">💝 Pratiquei caridade</span>
-                                                    </label>
-                                                    
-                                                    <label className="flex items-center gap-3 p-3 bg-red-900/30 rounded-lg cursor-pointer hover:bg-red-800/40 transition-all border border-red-600/30">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={newLog.feltAnger}
-                                                            onChange={(e) => setNewLog({...newLog, feltAnger: e.target.checked})}
-                                                            className="w-5 h-5 rounded border-slate-600 text-red-600"
-                                                        />
-                                                        <span className="text-white font-semibold">😤 Senti raiva/ira</span>
-                                                    </label>
-                                                    
-                                                    <label className="flex items-center gap-3 p-3 bg-orange-900/30 rounded-lg cursor-pointer hover:bg-orange-800/40 transition-all border border-orange-600/30">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={newLog.gossiped}
-                                                            onChange={(e) => setNewLog({...newLog, gossiped: e.target.checked})}
-                                                            className="w-5 h-5 rounded border-slate-600 text-orange-600"
-                                                        />
-                                                        <span className="text-white font-semibold">🗣️ Fofoquei</span>
-                                                    </label>
+                                                {/* Virtudes Praticadas */}
+                                                <div className="mb-4">
+                                                    <h5 className="text-sm font-bold text-green-400 mb-3 flex items-center gap-2">
+                                                        ✨ Virtudes Praticadas
+                                                    </h5>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        <label className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-700/50 transition-all">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={newLog.gratitude}
+                                                                onChange={(e) => setNewLog({...newLog, gratitude: e.target.checked})}
+                                                                className="w-5 h-5 rounded border-slate-600 text-green-600"
+                                                            />
+                                                            <span className="text-white font-semibold">🙏 Pratiquei gratidão</span>
+                                                        </label>
+                                                        
+                                                        <label className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-700/50 transition-all">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={newLog.charity}
+                                                                onChange={(e) => setNewLog({...newLog, charity: e.target.checked})}
+                                                                className="w-5 h-5 rounded border-slate-600 text-yellow-600"
+                                                            />
+                                                            <span className="text-white font-semibold">💝 Pratiquei caridade</span>
+                                                        </label>
+                                                        
+                                                        <label className="flex items-center gap-3 p-3 bg-indigo-900/20 rounded-lg cursor-pointer hover:bg-indigo-800/30 transition-all border-2 border-indigo-700/30">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={newLog.isFasting}
+                                                                onChange={(e) => setNewLog({...newLog, isFasting: e.target.checked, isRefeed: false, calories: e.target.checked ? '0' : newLog.calories})}
+                                                                className="w-5 h-5 rounded border-slate-600 text-indigo-600"
+                                                            />
+                                                            <span className="text-white font-semibold">🧼 Pratiquei jejum (24h)</span>
+                                                        </label>
+                                                    </div>
                                                 </div>
+                                                
+                                                {/* Pontos de Atenção */}
+                                                <div className="mb-4">
+                                                    <h5 className="text-sm font-bold text-orange-400 mb-3 flex items-center gap-2">
+                                                        ⚠️ Pontos de Atenção
+                                                    </h5>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        <label className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-700/50 transition-all">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={newLog.judgedOthers}
+                                                                onChange={(e) => setNewLog({...newLog, judgedOthers: e.target.checked})}
+                                                                className="w-5 h-5 rounded border-slate-600 text-red-600"
+                                                            />
+                                                            <span className="text-white font-semibold">⚖️ Julguei outras pessoas</span>
+                                                        </label>
+                                                        
+                                                        <label className="flex items-center gap-3 p-3 bg-red-900/30 rounded-lg cursor-pointer hover:bg-red-800/40 transition-all border-2 border-red-600/30">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={newLog.feltAnger}
+                                                                onChange={(e) => setNewLog({...newLog, feltAnger: e.target.checked})}
+                                                                className="w-5 h-5 rounded border-slate-600 text-red-600"
+                                                            />
+                                                            <span className="text-white font-semibold">😤 Senti raiva/ira</span>
+                                                        </label>
+                                                        
+                                                        <label className="flex items-center gap-3 p-3 bg-orange-900/30 rounded-lg cursor-pointer hover:bg-orange-800/40 transition-all border-2 border-orange-600/30">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={newLog.gossiped}
+                                                                onChange={(e) => setNewLog({...newLog, gossiped: e.target.checked})}
+                                                                className="w-5 h-5 rounded border-slate-600 text-orange-600"
+                                                            />
+                                                            <span className="text-white font-semibold">🗣️ Fofoquei/falei mal dos outros</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                
                                                 <div>
                                                     <label className="block text-xs text-slate-400 mb-2">
                                                         📖 Journal espiritual (opcional)
@@ -5162,7 +5238,7 @@
                                                     <textarea
                                                         value={newLog.spiritualNotes}
                                                         onChange={(e) => setNewLog({...newLog, spiritualNotes: e.target.value})}
-                                                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white text-sm"
+                                                        className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white text-sm"
                                                         placeholder="Reflexões do dia, insights espirituais, orações, etc."
                                                         rows="2"
                                                     />
@@ -5221,7 +5297,7 @@
                                                             <span>Muito difícil</span>
                                                         </div>
                                                         {newLog.urgeLevel >= 7 && (
-                                                            <div className="mt-2 p-2 bg-orange-600/20 border border-orange-500 rounded-lg text-xs text-orange-300">
+                                                            <div className="mt-2 p-2 bg-orange-600/20 border-2 border-orange-500 rounded-lg text-xs text-orange-300">
                                                                 💪 <strong>Dia desafiador!</strong> Isso mostra que você está resistindo. Continue forte! Use o protocolo de emergência sempre que precisar.
                                                             </div>
                                                         )}
@@ -5235,7 +5311,7 @@
                                                     <textarea
                                                         value={newLog.nofapNotes}
                                                         onChange={(e) => setNewLog({...newLog, nofapNotes: e.target.value})}
-                                                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white text-sm"
+                                                        className="w-full bg-slate-700 border-2 border-slate-600 rounded-lg px-4 py-2 text-white text-sm"
                                                         placeholder="Gatilhos enfrentados, estratégias que funcionaram, pensamentos, etc."
                                                         rows="2"
                                                     />
@@ -5411,7 +5487,7 @@
                                                                                 'consagracao-cristais': '💎 Cristais'
                                                                             };
                                                                             return (
-                                                                                <span key={idx} className="text-xs bg-indigo-600/30 px-2 py-1 rounded border border-indigo-500/50">
+                                                                                <span key={idx} className="text-xs bg-indigo-600/30 px-2 py-1 rounded border-2 border-indigo-500/50">
                                                                                     {labels[med.type]} ({med.minutes}min)
                                                                                 </span>
                                                                             );
@@ -5431,7 +5507,7 @@
                                                                 </div>
                                                                 
                                                                 {log.spiritualNotes && (
-                                                                    <div className="text-xs bg-indigo-600/20 p-2 rounded mt-2 border border-indigo-500/30">
+                                                                    <div className="text-xs bg-indigo-600/20 p-2 rounded mt-2 border-2 border-indigo-500/30">
                                                                         <span className="opacity-70">🧘 </span>
                                                                         <span>{log.spiritualNotes}</span>
                                                                     </div>
@@ -5465,7 +5541,7 @@
                                                                 </div>
                                                                 
                                                                 {log.nofapNotes && (
-                                                                    <div className="text-xs bg-cyan-600/20 p-2 rounded mt-2 border border-cyan-500/30">
+                                                                    <div className="text-xs bg-cyan-600/20 p-2 rounded mt-2 border-2 border-cyan-500/30">
                                                                         <span className="opacity-70">💪 </span>
                                                                         <span>{log.nofapNotes}</span>
                                                                     </div>
@@ -5513,7 +5589,7 @@
                         )}
 
                         {/* Charts Tab */}
-                        {activeTab === 'charts' && (
+                        {activeTab === 'charts' && fitnessModeEnabled && (
                             <div className="space-y-6">
                                 <h2 className="text-2xl font-bold flex items-center">
                                     <TrendingUp className="mr-3 h-8 w-8 text-blue-400" />
@@ -5521,7 +5597,7 @@
                                 </h2>
 
                                 {evaluations.length < 2 ? (
-                                    <div className="text-center py-12 text-slate-400 bg-slate-800/50 rounded-xl p-8 border border-slate-700">
+                                    <div className="text-center py-12 text-slate-400 bg-slate-800/50 rounded-xl p-8 border-2 border-slate-700">
                                         <TrendingUp className="h-16 w-16 mx-auto mb-4 opacity-50" />
                                         <p className="text-lg mb-2">Gráficos disponíveis após 2+ avaliações</p>
                                         <p className="text-sm">Continue registrando suas avaliações para ver o progresso visual!</p>
@@ -5529,7 +5605,7 @@
                                 ) : (
                                     <>
                                         {/* Body Composition Evolution */}
-                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                             <h3 className="text-xl font-bold mb-6 flex items-center">
                                                 <Scale className="mr-2 h-6 w-6 text-purple-400" />
                                                 Evolução da Composição Corporal
@@ -5655,7 +5731,7 @@
                                         </div>
 
                                         {/* Line Charts - Weight & BF% Evolution */}
-                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                             <h3 className="text-xl font-bold mb-6 flex items-center">
                                                 <TrendingDown className="mr-2 h-6 w-6 text-blue-400" />
                                                 Evolução ao Longo do Tempo
@@ -5803,7 +5879,7 @@
                                         </div>
 
                                         {/* Muscle vs Fat Mass */}
-                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                             <h3 className="text-xl font-bold mb-6 flex items-center">
                                                 <Activity className="mr-2 h-6 w-6 text-green-400" />
                                                 Massa Muscular vs Gordura Corporal
@@ -6065,7 +6141,7 @@
                                         </div>
 
                                         {/* Skinfold Measurements Tracking */}
-                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                        <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                             <h3 className="text-xl font-bold mb-6 flex items-center">
                                                 <Ruler className="mr-2 h-6 w-6 text-yellow-400" />
                                                 Evolução das Dobras Cutâneas (mm)
@@ -6245,7 +6321,7 @@
 
                                         {/* Calories Deficit Tracking */}
                                         {dailyLogs.length > 0 && (
-                                            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                                 <h3 className="text-xl font-bold mb-6 flex items-center">
                                                     <Flame className="mr-2 h-6 w-6 text-orange-400" />
                                                     Histórico de Deficit Calórico (últimos 14 dias)
@@ -6338,7 +6414,7 @@
                                         )}
 
                                         {/* Summary Stats */}
-                                        <div className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 backdrop-blur rounded-xl p-6 border border-blue-700/50">
+                                        <div className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 backdrop-blur rounded-xl p-6 border-2 border-blue-700/50">
                                             <h3 className="text-xl font-bold mb-6 flex items-center">
                                                 <Award className="mr-2 h-6 w-6 text-yellow-400" />
                                                 Resumo do Progresso
@@ -6492,11 +6568,11 @@
                                             <ul className="space-y-2 ml-4">
                                                 <li className="flex items-start gap-2">
                                                     <span className="text-purple-400 mt-1">✨</span>
-                                                    <span><strong>Conversar com seu EU Superior</strong> - Fale sobre seu dia, seus desafios</span>
+                                                    <span><strong>Conversar com seu EU SUPERIOR</strong> - Fale sobre seu dia, seus desafios</span>
                                                 </li>
                                                 <li className="flex items-start gap-2">
                                                     <span className="text-cyan-400 mt-1">🌌</span>
-                                                    <span><strong>Conectar com seu EU Maior</strong> - Ele precisa de você!</span>
+                                                    <span><strong>Conectar com seu EU MAIOR</strong> - Ele precisa de você!</span>
                                                 </li>
                                                 <li className="flex items-start gap-2">
                                                     <span className="text-pink-400 mt-1">👥</span>
@@ -6542,7 +6618,7 @@
                                 </div>
 
                                 {/* Canal do Marcelo Marins */}
-                                <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 backdrop-blur rounded-xl p-6 border border-purple-700/50">
+                                <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 backdrop-blur rounded-xl p-6 border-2 border-purple-700/50">
                                     <div className="flex items-center justify-between flex-wrap gap-4">
                                         <div className="flex items-center gap-4">
                                             <div className="text-5xl">🌌</div>
@@ -6650,7 +6726,7 @@
                                     return (
                                         <>
                                             {/* Protocolo dos Filhos das Estrelas */}
-                                            <div className="bg-gradient-to-br from-indigo-900/70 to-purple-900/70 backdrop-blur rounded-2xl p-6 border-4 border-indigo-400/50 shadow-2xl">
+                                            <div className="bg-gradient-to-br from-indigo-900/70 to-purple-900/70 backdrop-blur rounded-2xl p-6 border-2 border-indigo-400/50 shadow-2xl">
                                                 <div className="text-center">
                                                     <h3 className="text-2xl font-bold text-indigo-200 mb-2 flex items-center justify-center gap-2">
                                                         ✨ Protocolo Filhos das Estrelas ✨
@@ -6669,7 +6745,7 @@
                                             </div>
 
                                             {/* Menu de Visualização de Métricas */}
-                                            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700">
+                                            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border-2 border-slate-700">
                                                 <div className="flex items-center gap-4 flex-wrap">
                                                     <span className="text-slate-300 font-semibold">📊 Visualizar:</span>
                                                     <div className="flex gap-2">
@@ -6699,34 +6775,34 @@
 
                                             {/* Métricas do Mês Atual */}
                                             {spiritualMetricsView === 'monthly' && (
-                                                <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 backdrop-blur rounded-xl p-6 border border-blue-700/50">
+                                                <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 backdrop-blur rounded-xl p-6 border-2 border-blue-700/50">
                                                     <h3 className="text-xl font-bold mb-6 flex items-center">
                                                         <span className="mr-2 text-2xl">📅</span>
                                                         Progresso deste Mês
                                                     </h3>
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                        <div className="bg-purple-800/30 rounded-lg p-4 text-center border border-purple-500/30">
+                                                        <div className="bg-purple-800/30 rounded-lg p-4 text-center border-2 border-purple-500/30">
                                                             <div className="text-4xl font-bold text-purple-300">
                                                                 {totalMeditations}
                                                             </div>
                                                             <div className="text-xs text-slate-300 mt-2">🧘 Meditações</div>
                                                             <div className="text-xs text-slate-400 mt-1">Este mês</div>
                                                         </div>
-                                                        <div className="bg-indigo-800/30 rounded-lg p-4 text-center border border-indigo-500/30">
+                                                        <div className="bg-indigo-800/30 rounded-lg p-4 text-center border-2 border-indigo-500/30">
                                                             <div className="text-4xl font-bold text-indigo-300">
                                                                 {totalMinutes}
                                                             </div>
                                                             <div className="text-xs text-slate-300 mt-2">⏱️ Minutos</div>
                                                             <div className="text-xs text-slate-400 mt-1">Este mês</div>
                                                         </div>
-                                                        <div className="bg-green-800/30 rounded-lg p-4 text-center border border-green-500/30">
+                                                        <div className="bg-green-800/30 rounded-lg p-4 text-center border-2 border-green-500/30">
                                                             <div className="text-4xl font-bold text-green-300">
                                                                 {gratitudeDays}
                                                             </div>
                                                             <div className="text-xs text-slate-300 mt-2">🙏 Gratidão</div>
                                                             <div className="text-xs text-slate-400 mt-1">Dias este mês</div>
                                                         </div>
-                                                        <div className="bg-yellow-800/30 rounded-lg p-4 text-center border border-yellow-500/30">
+                                                        <div className="bg-yellow-800/30 rounded-lg p-4 text-center border-2 border-yellow-500/30">
                                                             <div className="text-4xl font-bold text-yellow-300">
                                                                 {charityDays}
                                                             </div>
@@ -6781,7 +6857,7 @@
                                                             <div className="text-xs text-pink-200 mt-1">DIAS TOTAIS</div>
                                                         </div>
                                                     </div>
-                                                    <div className="mt-4 text-center p-3 bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-lg border border-purple-400/30">
+                                                    <div className="mt-4 text-center p-3 bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-lg border-2 border-purple-400/30">
                                                         <p className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">
                                                             {allTimeMinutes >= 10000 ? '🌌 Você está alcançando a consciência cósmica!' : 
                                                              allTimeMinutes >= 5000 ? '✨ Sua conexão com o universo é PROFUNDA!' :
@@ -6799,13 +6875,13 @@
                                                 const displayTotal = spiritualMetricsView === 'monthly' ? totalMeditations : allTimeMeditations;
                                                 
                                                 return (
-                                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                                         <h3 className="text-xl font-bold mb-6 flex items-center">
                                                             <span className="mr-2 text-2xl">📊</span>
                                                             Tipos de Meditação ({spiritualMetricsView === 'monthly' ? 'Este Mês' : 'Todos os Tempos'})
                                                         </h3>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30">
+                                                            <div className="bg-blue-900/30 rounded-lg p-4 border-2 border-blue-500/30">
                                                                 <div className="flex items-center justify-between mb-2">
                                                                     <div className="flex flex-col">
                                                                         <span className="text-blue-200 font-semibold">🧼 Limpeza Própria</span>
@@ -6820,7 +6896,7 @@
                                                                     />
                                                                 </div>
                                                             </div>
-                                                            <div className="bg-amber-900/30 rounded-lg p-4 border border-amber-500/30">
+                                                            <div className="bg-amber-900/30 rounded-lg p-4 border-2 border-amber-500/30">
                                                                 <div className="flex items-center justify-between mb-2">
                                                                     <div className="flex flex-col">
                                                                         <span className="text-amber-200 font-semibold">🛡️ Proteção</span>
@@ -6835,7 +6911,7 @@
                                                                     />
                                                                 </div>
                                                             </div>
-                                                            <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/30">
+                                                            <div className="bg-purple-900/30 rounded-lg p-4 border-2 border-purple-500/30">
                                                                 <div className="flex items-center justify-between mb-2">
                                                                     <div className="flex flex-col">
                                                                         <span className="text-purple-200 font-semibold">✨ Conexão</span>
@@ -6850,7 +6926,7 @@
                                                                     />
                                                                 </div>
                                                             </div>
-                                                            <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/30">
+                                                            <div className="bg-green-900/30 rounded-lg p-4 border-2 border-green-500/30">
                                                                 <div className="flex items-center justify-between mb-2">
                                                                     <div className="flex flex-col">
                                                                         <span className="text-green-200 font-semibold">🏠 Limpeza de Ambiente</span>
@@ -6865,7 +6941,7 @@
                                                                     />
                                                                 </div>
                                                             </div>
-                                                            <div className="bg-pink-900/30 rounded-lg p-4 border border-pink-500/30 md:col-span-2">
+                                                            <div className="bg-pink-900/30 rounded-lg p-4 border-2 border-pink-500/30 md:col-span-2">
                                                                 <div className="flex items-center justify-between mb-2">
                                                                     <div className="flex flex-col">
                                                                         <span className="text-pink-200 font-semibold">💎 Consagração de Cristais</span>
@@ -6886,7 +6962,7 @@
                                             })()}
 
                                             {/* Calendário de Consistência */}
-                                            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                                 <h3 className="text-xl font-bold mb-6 flex items-center">
                                                     <span className="mr-2 text-2xl">📅</span>
                                                     Calendário de Consistência (Últimos 30 dias)
@@ -6984,20 +7060,20 @@
                                                 const consistency = (protocolStreak / 7) * 100;
                                                 
                                                 return (
-                                                    <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 backdrop-blur rounded-xl p-6 border border-cyan-700/50">
+                                                    <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 backdrop-blur rounded-xl p-6 border-2 border-cyan-700/50">
                                                         <h3 className="text-xl font-bold mb-4 flex items-center text-cyan-200">
                                                             <span className="mr-2 text-2xl">📈</span>
                                                             Força Espiritual (Última Semana)
                                                         </h3>
                                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                            <div className="bg-cyan-800/30 rounded-lg p-4 text-center border border-cyan-500/30">
+                                                            <div className="bg-cyan-800/30 rounded-lg p-4 text-center border-2 border-cyan-500/30">
                                                                 <div className="text-4xl font-bold text-cyan-300">
                                                                     {consistency.toFixed(0)}%
                                                                 </div>
                                                                 <div className="text-xs text-slate-300 mt-2">Consistência</div>
                                                                 <div className="text-xs text-slate-400 mt-1">{protocolStreak}/7 dias</div>
                                                             </div>
-                                                            <div className="bg-blue-800/30 rounded-lg p-4 text-center border border-blue-500/30">
+                                                            <div className="bg-blue-800/30 rounded-lg p-4 text-center border-2 border-blue-500/30">
                                                                 <div className="text-4xl font-bold text-blue-300">
                                                                     {avgMinutes.toFixed(0)}
                                                                 </div>
@@ -7031,14 +7107,14 @@
 
                                             {/* Shadow Work & Energy Cleansing Alerts */}
                                             {(judgmentDays > 0 || angerDays > 0 || gossipDays > 0) && (
-                                                <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 backdrop-blur rounded-xl p-6 border border-red-700/50">
+                                                <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 backdrop-blur rounded-xl p-6 border-2 border-red-700/50">
                                                     <h3 className="text-xl font-bold mb-4 flex items-center text-red-300">
                                                         <span className="mr-2 text-2xl">⚠️</span>
                                                         Limpeza Energética Necessária
                                                     </h3>
                                                     <div className="space-y-3 text-slate-200">
                                                         {judgmentDays > 0 && (
-                                                            <div className="p-3 bg-red-900/30 rounded-lg border border-red-500/30">
+                                                            <div className="p-3 bg-red-900/30 rounded-lg border-2 border-red-500/30">
                                                                 <div className="font-bold text-red-300">⚖️ Julgamento</div>
                                                                 <p className="text-sm mt-1">
                                                                     {judgmentDays} dia{judgmentDays > 1 ? 's' : ''} - A autoconsciência é o primeiro passo. 
@@ -7047,7 +7123,7 @@
                                                             </div>
                                                         )}
                                                         {angerDays > 0 && (
-                                                            <div className="p-3 bg-orange-900/30 rounded-lg border border-orange-500/30">
+                                                            <div className="p-3 bg-orange-900/30 rounded-lg border-2 border-orange-500/30">
                                                                 <div className="font-bold text-orange-300">😤 Raiva/Ira</div>
                                                                 <p className="text-sm mt-1">
                                                                     {angerDays} dia{angerDays > 1 ? 's' : ''} - Energia densa detectada. 
@@ -7056,7 +7132,7 @@
                                                             </div>
                                                         )}
                                                         {gossipDays > 0 && (
-                                                            <div className="p-3 bg-yellow-900/30 rounded-lg border border-yellow-500/30">
+                                                            <div className="p-3 bg-yellow-900/30 rounded-lg border-2 border-yellow-500/30">
                                                                 <div className="font-bold text-yellow-300">🗣️ Fofoca</div>
                                                                 <p className="text-sm mt-1">
                                                                     {gossipDays} dia{gossipDays > 1 ? 's' : ''} - A energia da palavra precisa ser limpa. 
@@ -7064,7 +7140,7 @@
                                                                 </p>
                                                             </div>
                                                         )}
-                                                        <div className="mt-4 p-3 bg-indigo-900/40 border border-indigo-500/40 rounded-lg">
+                                                        <div className="mt-4 p-3 bg-indigo-900/40 border-2 border-indigo-500/40 rounded-lg">
                                                             <div className="font-bold text-indigo-200 mb-2">💡 Recomendação dos Filhos das Estrelas:</div>
                                                             <p className="text-xs">
                                                                 Faça limpezas extras nos dias em que detectar essas energias. 
@@ -7110,7 +7186,7 @@
                                                 const selectedLog = selectedSpiritualDay ? dataByDate[selectedSpiritualDay] : null;
                                                 
                                                 return (
-                                                <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                                <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                                     <div className="flex items-center justify-between mb-6">
                                                         <h3 className="text-xl font-bold flex items-center">
                                                             <span className="mr-2 text-2xl">📖</span>
@@ -7129,7 +7205,7 @@
                                                                     });
                                                                     setSelectedSpiritualDay(null);
                                                                 }}
-                                                                className="bg-slate-700 border border-slate-600 text-slate-200 rounded-lg px-3 py-2 text-sm font-semibold cursor-pointer hover:bg-slate-600 transition-colors focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                                                className="bg-slate-700 border-2 border-slate-600 text-slate-200 rounded-lg px-3 py-2 text-sm font-semibold cursor-pointer hover:bg-slate-600 transition-colors focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                                             >
                                                                 {[
                                                                     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -7149,7 +7225,7 @@
                                                                     });
                                                                     setSelectedSpiritualDay(null);
                                                                 }}
-                                                                className="bg-slate-700 border border-slate-600 text-slate-200 rounded-lg px-3 py-2 text-sm font-semibold cursor-pointer hover:bg-slate-600 transition-colors focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                                                className="bg-slate-700 border-2 border-slate-600 text-slate-200 rounded-lg px-3 py-2 text-sm font-semibold cursor-pointer hover:bg-slate-600 transition-colors focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                                             >
                                                                 {(() => {
                                                                     const currentYear = new Date().getFullYear();
@@ -7201,15 +7277,15 @@
                                                         
                                                         return monthData.length > 0 ? (
                                                             <div className="grid grid-cols-3 gap-3 mb-6">
-                                                                <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
+                                                                <div className="bg-slate-700/30 rounded-lg p-3 border-2 border-slate-600/50">
                                                                     <div className="text-xs text-slate-400 mb-1">Dias Registrados</div>
                                                                     <div className="text-2xl font-bold text-purple-400">{monthData.length}</div>
                                                                 </div>
-                                                                <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
+                                                                <div className="bg-slate-700/30 rounded-lg p-3 border-2 border-slate-600/50">
                                                                     <div className="text-xs text-slate-400 mb-1">Protocolo Completo</div>
                                                                     <div className="text-2xl font-bold text-green-400">{daysWithProtocol}</div>
                                                                 </div>
-                                                                <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
+                                                                <div className="bg-slate-700/30 rounded-lg p-3 border-2 border-slate-600/50">
                                                                     <div className="text-xs text-slate-400 mb-1">Minutos Totais</div>
                                                                     <div className="text-2xl font-bold text-cyan-400">{totalMinutes}</div>
                                                                 </div>
@@ -7381,7 +7457,7 @@
                                                                 
                                                                 if (totalDays === 0) {
                                                                     return (
-                                                                        <div className="bg-slate-700/30 rounded-lg p-6 border border-slate-600/50 text-center">
+                                                                        <div className="bg-slate-700/30 rounded-lg p-6 border-2 border-slate-600/50 text-center">
                                                                             <p className="text-slate-400">Nenhuma prática registrada este mês</p>
                                                                         </div>
                                                                     );
@@ -7391,24 +7467,24 @@
                                                                     <>
                                                                         {/* Cards de estatísticas */}
                                                                         <div className="grid grid-cols-2 gap-3">
-                                                                            <div className="bg-gradient-to-br from-purple-900/40 to-purple-800/30 rounded-lg p-4 border border-purple-500/40">
+                                                                            <div className="bg-gradient-to-br from-purple-900/40 to-purple-800/30 rounded-lg p-4 border-2 border-purple-500/40">
                                                                                 <div className="text-2xl font-bold text-purple-300">{totalMinutes}</div>
                                                                                 <div className="text-xs text-slate-300">Minutos totais</div>
                                                                                 <div className="text-xs text-slate-400 mt-1">{avgMinutesPerDay} min/dia</div>
                                                                             </div>
-                                                                            <div className="bg-gradient-to-br from-green-900/40 to-green-800/30 rounded-lg p-4 border border-green-500/40">
+                                                                            <div className="bg-gradient-to-br from-green-900/40 to-green-800/30 rounded-lg p-4 border-2 border-green-500/40">
                                                                                 <div className="text-2xl font-bold text-green-300">{daysWithProtocol}</div>
                                                                                 <div className="text-xs text-slate-300">Protocolo completo</div>
                                                                                 <div className="text-xs text-slate-400 mt-1">{totalDays > 0 ? Math.round((daysWithProtocol/totalDays)*100) : 0}% dos dias</div>
                                                                             </div>
                                                                             {daysWithJejum > 0 && (
-                                                                                <div className="bg-gradient-to-br from-indigo-900/40 to-indigo-800/30 rounded-lg p-4 border border-indigo-500/40">
+                                                                                <div className="bg-gradient-to-br from-indigo-900/40 to-indigo-800/30 rounded-lg p-4 border-2 border-indigo-500/40">
                                                                                     <div className="text-2xl font-bold text-indigo-300">{daysWithJejum}</div>
                                                                                     <div className="text-xs text-slate-300">🔥 Jejuns 24h</div>
                                                                                 </div>
                                                                             )}
                                                                             {topMeditation && (
-                                                                                <div className="bg-gradient-to-br from-cyan-900/40 to-cyan-800/30 rounded-lg p-4 border border-cyan-500/40">
+                                                                                <div className="bg-gradient-to-br from-cyan-900/40 to-cyan-800/30 rounded-lg p-4 border-2 border-cyan-500/40">
                                                                                     <div className="text-base font-bold text-cyan-300">{meditationLabels[topMeditation[0]].split(' ')[0]}</div>
                                                                                     <div className="text-xs text-slate-300">Mais praticada</div>
                                                                                     <div className="text-xs text-slate-400 mt-1">{topMeditation[1]}x</div>
@@ -7417,7 +7493,7 @@
                                                                         </div>
                                                                         
                                                                         {/* Virtudes e Desafios */}
-                                                                        <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                                                                        <div className="bg-slate-700/30 rounded-lg p-4 border-2 border-slate-600/50">
                                                                             <h4 className="text-sm font-bold text-green-300 mb-2">🌟 Virtudes</h4>
                                                                             <div className="space-y-1.5 text-xs">
                                                                                 {gratitudeDays > 0 && (
@@ -7439,7 +7515,7 @@
                                                                         </div>
                                                                         
                                                                         {(judgementDays > 0 || angerDays > 0 || gossipDays > 0) && (
-                                                                            <div className="bg-slate-700/30 rounded-lg p-4 border border-orange-500/30">
+                                                                            <div className="bg-slate-700/30 rounded-lg p-4 border-2 border-orange-500/30">
                                                                                 <h4 className="text-sm font-bold text-orange-300 mb-2">⚠️ Pontos de Atenção</h4>
                                                                                 <div className="space-y-1.5 text-xs">
                                                                                     {judgementDays > 0 && (
@@ -7465,7 +7541,7 @@
                                                                         )}
                                                                         
                                                                         {/* Mensagem motivacional */}
-                                                                        <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-lg p-4 border border-purple-500/30">
+                                                                        <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-lg p-4 border-2 border-purple-500/30">
                                                                             <p className="text-sm text-purple-200 italic">
                                                                                 {daysWithProtocol >= totalDays * 0.8 
                                                                                     ? "🌟 Excelente consistência! Você está no caminho da iluminação!"
@@ -7489,13 +7565,13 @@
                                                         const totalMinutes = log.meditations?.reduce((sum, med) => sum + med.minutes, 0) || 0;
                                                         
                                                         return (
-                                                            <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50 border-purple-500/70 shadow-lg"
+                                                            <div className="bg-slate-700/30 rounded-lg p-4 border-2 border-slate-600/50 border-purple-500/70 shadow-lg"
                                                                 key={log.id}>
                                                                     <div className="flex items-start justify-between mb-3">
                                                                         <div>
                                                                             <div className="font-bold text-white flex items-center gap-2">
                                                                                 📅 {new Date(log.date).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-                                                                                {hasProtocol && <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded border border-green-500/30">Protocolo ✓</span>}
+                                                                                {hasProtocol && <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded border-2 border-green-500/30">Protocolo ✓</span>}
                                                                             </div>
                                                                             <div className="text-xs text-slate-400 mt-1">
                                                                                 {log.meditations?.length || 0} meditações • {totalMinutes} minutos
@@ -7506,7 +7582,7 @@
                                                                     {/* Meditações do dia */}
                                                                     <div className="flex flex-wrap gap-2 mb-3">
                                                                         {log.meditations?.map((med, idx) => (
-                                                                            <div key={idx} className="text-xs bg-purple-900/30 text-purple-200 px-3 py-1 rounded-full border border-purple-500/30">
+                                                                            <div key={idx} className="text-xs bg-purple-900/30 text-purple-200 px-3 py-1 rounded-full border-2 border-purple-500/30">
                                                                                 {med.type === 'limpeza-propria' && '🧼 Limpeza Própria'}
                                                                                 {med.type === 'limpeza-ambiente' && '🏠 Limpeza Ambiente'}
                                                                                 {med.type === 'protecao' && '🛡️ Proteção'}
@@ -7520,11 +7596,11 @@
                                                                     
                                                                     {/* Práticas adicionais */}
                                                                     <div className="flex flex-wrap gap-2 mb-3 text-xs">
-                                                                        {log.gratitude && <span className="bg-green-900/30 text-green-300 px-2 py-1 rounded border border-green-500/30">🙏 Gratidão</span>}
-                                                                        {log.charity && <span className="bg-yellow-900/30 text-yellow-300 px-2 py-1 rounded border border-yellow-500/30">💝 Caridade</span>}
-                                                                        {log.judgedOthers && <span className="bg-red-900/30 text-red-300 px-2 py-1 rounded border border-red-500/30">⚖️ Julgamento</span>}
-                                                                        {log.feltAnger && <span className="bg-orange-900/30 text-orange-300 px-2 py-1 rounded border border-orange-500/30">😤 Raiva</span>}
-                                                                        {log.gossiped && <span className="bg-amber-900/30 text-amber-300 px-2 py-1 rounded border border-amber-500/30">🗣️ Fofoca</span>}
+                                                                        {log.gratitude && <span className="bg-green-900/30 text-green-300 px-2 py-1 rounded border-2 border-green-500/30">🙏 Gratidão</span>}
+                                                                        {log.charity && <span className="bg-yellow-900/30 text-yellow-300 px-2 py-1 rounded border-2 border-yellow-500/30">💝 Caridade</span>}
+                                                                        {log.judgedOthers && <span className="bg-red-900/30 text-red-300 px-2 py-1 rounded border-2 border-red-500/30">⚖️ Julgamento</span>}
+                                                                        {log.feltAnger && <span className="bg-orange-900/30 text-orange-300 px-2 py-1 rounded border-2 border-orange-500/30">😤 Raiva</span>}
+                                                                        {log.gossiped && <span className="bg-amber-900/30 text-amber-300 px-2 py-1 rounded border-2 border-amber-500/30">🗣️ Fofoca</span>}
                                                                     </div>
                                                                     
                                                                     {/* Journal notes */}
@@ -7539,7 +7615,7 @@
                                                         })()}
                                                     
                                                     {!selectedLog && (
-                                                        <div className="text-center py-8 text-slate-400 bg-slate-700/20 rounded-lg border border-slate-600/30">
+                                                        <div className="text-center py-8 text-slate-400 bg-slate-700/20 rounded-lg border-2 border-slate-600/30">
                                                             <p className="text-sm">Clique em um dia do calendário para ver os detalhes</p>
                                                         </div>
                                                     )}
@@ -7548,7 +7624,7 @@
                                             })()}
 
                                             {spiritualMetricsView === 'monthly' && totalMeditations === 0 && (
-                                                <div className="text-center py-12 text-slate-400 bg-slate-800/50 rounded-xl p-8 border border-slate-700">
+                                                <div className="text-center py-12 text-slate-400 bg-slate-800/50 rounded-xl p-8 border-2 border-slate-700">
                                                     <span className="text-6xl mb-4 block">🧘</span>
                                                     <p className="text-lg mb-2">Nenhuma meditação registrada este mês</p>
                                                     <p className="text-sm">Comece sua jornada espiritual registrando suas práticas diárias!</p>
@@ -7556,7 +7632,7 @@
                                             )}
                                             
                                             {spiritualMetricsView === 'alltime' && allTimeMeditations === 0 && (
-                                                <div className="text-center py-12 text-slate-400 bg-slate-800/50 rounded-xl p-8 border border-slate-700">
+                                                <div className="text-center py-12 text-slate-400 bg-slate-800/50 rounded-xl p-8 border-2 border-slate-700">
                                                     <span className="text-6xl mb-4 block">🧘</span>
                                                     <p className="text-lg mb-2">Nenhuma meditação registrada ainda</p>
                                                     <p className="text-sm">Comece sua jornada espiritual registrando suas práticas diárias!</p>
@@ -7639,32 +7715,32 @@
                                 </div>
 
                                 {/* Princípios Fundamentais */}
-                                <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 backdrop-blur rounded-xl p-6 border border-purple-700/50">
+                                <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 backdrop-blur rounded-xl p-6 border-2 border-purple-700/50">
                                     <h3 className="text-xl font-bold text-purple-200 mb-4 flex items-center gap-2">
                                         ⚔️ Os 5 Pilares da Transformação NoFap
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border border-slate-600">
+                                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border-2 border-slate-600">
                                             <div className="text-3xl mb-2">🚫</div>
                                             <div className="text-sm font-bold text-white">Evite Gatilhos</div>
                                             <div className="text-xs text-slate-400 mt-1">Mídias sociais, filmes, solidão</div>
                                         </div>
-                                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border border-slate-600">
+                                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border-2 border-slate-600">
                                             <div className="text-3xl mb-2">💪</div>
                                             <div className="text-sm font-bold text-white">Exercício Físico</div>
                                             <div className="text-xs text-slate-400 mt-1">Transmuta a energia</div>
                                         </div>
-                                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border border-slate-600">
+                                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border-2 border-slate-600">
                                             <div className="text-3xl mb-2">🧘</div>
                                             <div className="text-sm font-bold text-white">Meditação</div>
                                             <div className="text-xs text-slate-400 mt-1">Controle mental</div>
                                         </div>
-                                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border border-slate-600">
+                                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border-2 border-slate-600">
                                             <div className="text-3xl mb-2">👥</div>
                                             <div className="text-sm font-bold text-white">Comunidade</div>
                                             <div className="text-xs text-slate-400 mt-1">Você não está sozinho</div>
                                         </div>
-                                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border border-slate-600">
+                                        <div className="text-center p-4 bg-slate-800/30 rounded-lg border-2 border-slate-600">
                                             <div className="text-3xl mb-2">🎯</div>
                                             <div className="text-sm font-bold text-white">Propósito</div>
                                             <div className="text-xs text-slate-400 mt-1">Redirecione sua energia</div>
@@ -7720,7 +7796,7 @@
                                     return (
                                         <>
                                             {/* Main Streak Banner */}
-                                            <div className="bg-gradient-to-br from-cyan-900/70 to-blue-900/70 backdrop-blur rounded-2xl p-8 border-4 border-cyan-500/50 shadow-2xl">
+                                            <div className="bg-gradient-to-br from-cyan-900/70 to-blue-900/70 backdrop-blur rounded-2xl p-8 border-2 border-cyan-500/50 shadow-2xl">
                                                 <div className="text-center">
                                                     <div className="text-7xl font-black text-cyan-300 mb-2 drop-shadow-lg">
                                                         {currentStreak}
@@ -7746,7 +7822,7 @@
 
                                             {/* Menu de Visualização de Métricas NoFap */}
                                             {totalDaysTracked > 0 && (
-                                                <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700">
+                                                <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border-2 border-slate-700">
                                                     <div className="flex items-center gap-4 flex-wrap">
                                                         <span className="text-slate-300 font-semibold">📊 Visualizar Métricas:</span>
                                                         <div className="flex gap-2">
@@ -7819,7 +7895,7 @@
                                                             <div className="text-xs text-pink-200 mt-1">DIAS TOTAIS</div>
                                                         </div>
                                                     </div>
-                                                    <div className="mt-4 text-center p-3 bg-gradient-to-r from-cyan-900/50 to-blue-900/50 rounded-lg border border-cyan-400/30">
+                                                    <div className="mt-4 text-center p-3 bg-gradient-to-r from-cyan-900/50 to-blue-900/50 rounded-lg border-2 border-cyan-400/30">
                                                         <p className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300">
                                                             {successRate >= 90 ? '💪🔥 Você é um guerreiro IMBATÍVEL!' : 
                                                              successRate >= 75 ? '💪 Seu domínio está CRESCENDO! Continue forte!' :
@@ -7832,27 +7908,27 @@
 
                                             {/* Métricas do Mês Atual NoFap */}
                                             {nofapMetricsView === 'monthly' && totalDaysTracked > 0 && (
-                                                <div className="bg-gradient-to-br from-blue-900/50 to-indigo-900/50 backdrop-blur rounded-xl p-6 border border-blue-700/50">
+                                                <div className="bg-gradient-to-br from-blue-900/50 to-indigo-900/50 backdrop-blur rounded-xl p-6 border-2 border-blue-700/50">
                                                     <h3 className="text-xl font-bold mb-6 flex items-center">
                                                         <span className="mr-2 text-2xl">📅</span>
                                                         Progresso deste Mês
                                                     </h3>
                                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                                        <div className="bg-cyan-800/30 rounded-lg p-4 text-center border border-cyan-500/30">
+                                                        <div className="bg-cyan-800/30 rounded-lg p-4 text-center border-2 border-cyan-500/30">
                                                             <div className="text-4xl font-bold text-cyan-300">
                                                                 {thisMonthClean}
                                                             </div>
                                                             <div className="text-xs text-slate-300 mt-2">✅ Dias Limpos</div>
                                                             <div className="text-xs text-slate-400 mt-1">Este mês</div>
                                                         </div>
-                                                        <div className="bg-blue-800/30 rounded-lg p-4 text-center border border-blue-500/30">
+                                                        <div className="bg-blue-800/30 rounded-lg p-4 text-center border-2 border-blue-500/30">
                                                             <div className="text-4xl font-bold text-blue-300">
                                                                 {thisMonthData.length - thisMonthClean}
                                                             </div>
                                                             <div className="text-xs text-slate-300 mt-2">⚠️ Recaídas</div>
                                                             <div className="text-xs text-slate-400 mt-1">Este mês</div>
                                                         </div>
-                                                        <div className="bg-green-800/30 rounded-lg p-4 text-center border border-green-500/30">
+                                                        <div className="bg-green-800/30 rounded-lg p-4 text-center border-2 border-green-500/30">
                                                             <div className="text-4xl font-bold text-green-300">
                                                                 {thisMonthData.length > 0 ? ((thisMonthClean / thisMonthData.length) * 100).toFixed(0) : 0}%
                                                             </div>
@@ -7865,7 +7941,7 @@
 
                                             {/* Alert System */}
                                             {recentHighUrge > 0 && (
-                                                <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 backdrop-blur rounded-xl p-6 border border-orange-700/50">
+                                                <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 backdrop-blur rounded-xl p-6 border-2 border-orange-700/50">
                                                     <h3 className="text-xl font-bold mb-4 flex items-center text-orange-300">
                                                         <span className="mr-2 text-2xl">⚠️</span>
                                                         Alerta: Zona de Perigo
@@ -7901,13 +7977,13 @@
                                                 const urgeReduction = avgUrgeFirst7 - avgUrgeLast7;
                                                 
                                                 return (
-                                                    <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 backdrop-blur rounded-xl p-6 border border-green-700/50">
+                                                    <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 backdrop-blur rounded-xl p-6 border-2 border-green-700/50">
                                                         <h3 className="text-xl font-bold mb-4 flex items-center text-green-200">
                                                             <span className="mr-2 text-2xl">📈</span>
                                                             Sua Evolução (Últimas 2 Semanas)
                                                         </h3>
                                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                            <div className="bg-green-800/30 rounded-lg p-4 text-center border border-green-500/30">
+                                                            <div className="bg-green-800/30 rounded-lg p-4 text-center border-2 border-green-500/30">
                                                                 <div className="text-sm text-slate-300 mb-2">Dias Limpos</div>
                                                                 <div className="flex items-center justify-center gap-3">
                                                                     <div className="text-2xl font-bold text-slate-400">{cleanFirst7}</div>
@@ -7922,7 +7998,7 @@
                                                                      improvement < 0 ? `${improvement} dias ↘️` : 'Manteve ⚖️'}
                                                                 </div>
                                                             </div>
-                                                            <div className="bg-blue-800/30 rounded-lg p-4 text-center border border-blue-500/30">
+                                                            <div className="bg-blue-800/30 rounded-lg p-4 text-center border-2 border-blue-500/30">
                                                                 <div className="text-sm text-slate-300 mb-2">Intensidade de Urges</div>
                                                                 <div className="flex items-center justify-center gap-3">
                                                                     <div className="text-2xl font-bold text-slate-400">{avgUrgeFirst7.toFixed(1)}</div>
@@ -7982,13 +8058,13 @@
                                                 const riskDay = maxDay ? dayNames[maxDay[0]] : null;
                                                 
                                                 return (
-                                                    <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 backdrop-blur rounded-xl p-6 border border-orange-700/50">
+                                                    <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 backdrop-blur rounded-xl p-6 border-2 border-orange-700/50">
                                                         <h3 className="text-xl font-bold mb-4 flex items-center text-orange-200">
                                                             <span className="mr-2 text-2xl">🎯</span>
                                                             Mapeamento de Gatilhos
                                                         </h3>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div className="bg-red-800/30 rounded-lg p-4 border border-red-500/30">
+                                                            <div className="bg-red-800/30 rounded-lg p-4 border-2 border-red-500/30">
                                                                 <div className="text-lg font-bold text-red-200 mb-2">📅 Dia Mais Desafiador</div>
                                                                 <div className="text-3xl font-bold text-red-300">{riskDay}</div>
                                                                 <div className="text-xs text-slate-300 mt-2">
@@ -7998,7 +8074,7 @@
                                                                     💡 Prepare-se com antecedência neste dia!
                                                                 </div>
                                                             </div>
-                                                            <div className="bg-yellow-800/30 rounded-lg p-4 border border-yellow-500/30">
+                                                            <div className="bg-yellow-800/30 rounded-lg p-4 border-2 border-yellow-500/30">
                                                                 <div className="text-lg font-bold text-yellow-200 mb-2">⚠️ Padrões Detectados</div>
                                                                 <div className="space-y-2 text-sm text-slate-300">
                                                                     <div className="flex items-center gap-2">
@@ -8015,7 +8091,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="mt-4 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-lg border border-purple-500/40">
+                                                        <div className="mt-4 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-lg border-2 border-purple-500/40">
                                                             <div className="font-bold text-purple-200 mb-2">🛡️ Estratégia de Defesa para {riskDay}:</div>
                                                             <ul className="text-xs text-slate-300 space-y-1 ml-4 list-disc">
                                                                 <li>Programe atividades para ocupar seu tempo</li>
@@ -8061,19 +8137,19 @@
                                                     
                                                     if (daysWithMeditation >= 5 && daysWithoutMeditation >= 5) {
                                                         return (
-                                                            <div className="bg-gradient-to-br from-purple-900/50 to-cyan-900/50 backdrop-blur rounded-xl p-6 border border-purple-700/50">
+                                                            <div className="bg-gradient-to-br from-purple-900/50 to-cyan-900/50 backdrop-blur rounded-xl p-6 border-2 border-purple-700/50">
                                                                 <h3 className="text-xl font-bold mb-4 flex items-center text-purple-200">
                                                                     <span className="mr-2 text-2xl">🔮</span>
                                                                     Conexão: Espiritualidade × NoFap
                                                                 </h3>
                                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                                    <div className="bg-purple-800/30 rounded-lg p-4 text-center border border-purple-500/30">
+                                                                    <div className="bg-purple-800/30 rounded-lg p-4 text-center border-2 border-purple-500/30">
                                                                         <div className="text-3xl font-bold text-purple-300">
                                                                             {successRateWithMeditation.toFixed(0)}%
                                                                         </div>
                                                                         <div className="text-xs text-slate-300 mt-2">Sucesso COM Protocolo</div>
                                                                     </div>
-                                                                    <div className="bg-slate-800/30 rounded-lg p-4 text-center border border-slate-500/30">
+                                                                    <div className="bg-slate-800/30 rounded-lg p-4 text-center border-2 border-slate-500/30">
                                                                         <div className="text-3xl font-bold text-slate-300">
                                                                             {successRateWithoutMeditation.toFixed(0)}%
                                                                         </div>
@@ -8114,7 +8190,7 @@
                                             )}
 
                                             {/* Calendário Visual de Streaks */}
-                                            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                                 <h3 className="text-xl font-bold mb-6 flex items-center">
                                                     <span className="mr-2 text-2xl">📅</span>
                                                     Calendário NoFap (Últimos 30 dias)
@@ -8184,19 +8260,19 @@
 
                                             {/* Stats Grid */}
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 backdrop-blur rounded-xl p-6 border border-blue-700/50">
+                                                <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 backdrop-blur rounded-xl p-6 border-2 border-blue-700/50">
                                                     <div className="text-4xl font-bold text-cyan-300">
                                                         {nofapData.length}
                                                     </div>
                                                     <div className="text-sm text-slate-300 mt-2">📅 Dias rastreados</div>
                                                 </div>
-                                                <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 backdrop-blur rounded-xl p-6 border border-green-700/50">
+                                                <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 backdrop-blur rounded-xl p-6 border-2 border-green-700/50">
                                                     <div className="text-4xl font-bold text-green-300">
                                                         {((nofapData.filter(log => log.cleanDay).length / nofapData.length) * 100 || 0).toFixed(0)}%
                                                     </div>
                                                     <div className="text-sm text-slate-300 mt-2">✅ Taxa de sucesso</div>
                                                 </div>
-                                                <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur rounded-xl p-6 border border-purple-700/50">
+                                                <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur rounded-xl p-6 border-2 border-purple-700/50">
                                                     <div className="text-4xl font-bold text-purple-300">
                                                         {(() => {
                                                             const recentUrges = nofapData.slice(0, 7).filter(log => log.cleanDay && log.urgeLevel);
@@ -8206,7 +8282,7 @@
                                                     </div>
                                                     <div className="text-sm text-slate-300 mt-2">🌊 Urge médio (7 dias)</div>
                                                 </div>
-                                                <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 backdrop-blur rounded-xl p-6 border border-red-700/50">
+                                                <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 backdrop-blur rounded-xl p-6 border-2 border-red-700/50">
                                                     <div className="text-4xl font-bold text-red-300">
                                                         {totalRelapses}
                                                     </div>
@@ -8216,7 +8292,7 @@
 
                                             {/* Análise de Padrões e Gatilhos */}
                                             {totalRelapses > 0 && (
-                                                <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                                <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                                     <h3 className="text-xl font-bold mb-6 flex items-center">
                                                         <span className="mr-2 text-2xl">🔍</span>
                                                         Análise de Padrões e Gatilhos
@@ -8251,7 +8327,7 @@
                                                         return (
                                                             <div className="space-y-4">
                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                    <div className="bg-red-900/30 rounded-lg p-4 border border-red-500/30">
+                                                                    <div className="bg-red-900/30 rounded-lg p-4 border-2 border-red-500/30">
                                                                         <div className="font-bold text-red-300 mb-2">📊 Dia da Semana Mais Crítico</div>
                                                                         {mostCommonDay ? (
                                                                             <p className="text-white text-xl font-bold capitalize">
@@ -8263,7 +8339,7 @@
                                                                         <p className="text-xs text-slate-400 mt-2">Fique extra vigilante neste dia!</p>
                                                                     </div>
                                                                     
-                                                                    <div className="bg-orange-900/30 rounded-lg p-4 border border-orange-500/30">
+                                                                    <div className="bg-orange-900/30 rounded-lg p-4 border-2 border-orange-500/30">
                                                                         <div className="font-bold text-orange-300 mb-2">⚠️ Urges Altos → Recaída</div>
                                                                         <p className="text-white text-xl font-bold">
                                                                             {highUrgeBeforeRelapse}/{relapses.length}
@@ -8276,7 +8352,7 @@
                                                                     </div>
                                                                 </div>
                                                                 
-                                                                <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30">
+                                                                <div className="bg-blue-900/30 rounded-lg p-4 border-2 border-blue-500/30">
                                                                     <div className="font-bold text-blue-300 mb-3">💡 Estratégias Baseadas nos Seus Dados</div>
                                                                     <ul className="text-sm text-slate-300 space-y-2">
                                                                         {mostCommonDay && mostCommonDay[1] >= 2 && (
@@ -8311,7 +8387,7 @@
 
                                             {/* Motivational Message */}
                                             {currentStreak >= 7 && (
-                                                <div className="bg-gradient-to-br from-yellow-900/50 to-amber-900/50 backdrop-blur rounded-xl p-6 border border-yellow-700/50">
+                                                <div className="bg-gradient-to-br from-yellow-900/50 to-amber-900/50 backdrop-blur rounded-xl p-6 border-2 border-yellow-700/50">
                                                     <h3 className="text-2xl font-bold mb-4 flex items-center text-yellow-300">
                                                         <span className="mr-2 text-3xl">⭐</span>
                                                         Parabéns Guerreiro!
@@ -8326,7 +8402,7 @@
 
                                             {/* Journal NoFap - Histórico de Dias */}
                                             {nofapData.length > 0 && (
-                                                <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                                <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border-2 border-slate-700">
                                                     <h3 className="text-xl font-bold mb-6 flex items-center">
                                                         <span className="mr-2 text-2xl">📖</span>
                                                         Journal NoFap (Últimos 15 Dias)
@@ -8347,8 +8423,8 @@
                                                                             <div className="font-bold text-white flex items-center gap-2">
                                                                                 📅 {new Date(log.date).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
                                                                                 {isRelapse ? 
-                                                                                    <span className="text-xs bg-red-500/30 text-red-200 px-2 py-1 rounded border border-red-500/50">⚠️ Recaída</span> :
-                                                                                    <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded border border-green-500/30">✅ Limpo</span>
+                                                                                    <span className="text-xs bg-red-500/30 text-red-200 px-2 py-1 rounded border-2 border-red-500/50">⚠️ Recaída</span> :
+                                                                                    <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded border-2 border-green-500/30">✅ Limpo</span>
                                                                                 }
                                                                             </div>
                                                                             {!isRelapse && (
@@ -8397,12 +8473,12 @@
                                                                     
                                                                     {/* Alertas específicos */}
                                                                     {!isRelapse && hasHighUrge && (
-                                                                        <div className="mt-2 text-xs bg-orange-600/20 border border-orange-500 rounded p-2 text-orange-200">
+                                                                        <div className="mt-2 text-xs bg-orange-600/20 border-2 border-orange-500 rounded p-2 text-orange-200">
                                                                             ⚠️ Este foi um dia de teste! Você resistiu a um urge alto - isso é crescimento!
                                                                         </div>
                                                                     )}
                                                                     {isRelapse && (
-                                                                        <div className="mt-2 text-xs bg-blue-600/20 border border-blue-500 rounded p-2 text-blue-200">
+                                                                        <div className="mt-2 text-xs bg-blue-600/20 border-2 border-blue-500 rounded p-2 text-blue-200">
                                                                             💡 Identifique os gatilhos deste dia. O que você pode fazer diferente da próxima vez?
                                                                         </div>
                                                                     )}
@@ -8414,7 +8490,7 @@
                                             )}
 
                                             {nofapData.length === 0 && (
-                                                <div className="text-center py-12 text-slate-400 bg-slate-800/50 rounded-xl p-8 border border-slate-700">
+                                                <div className="text-center py-12 text-slate-400 bg-slate-800/50 rounded-xl p-8 border-2 border-slate-700">
                                                     <span className="text-6xl mb-4 block">💪</span>
                                                     <p className="text-lg mb-2">Comece sua jornada NoFap hoje!</p>
                                                     <p className="text-sm">Registre seus dias e acompanhe seu progresso rumo à liberdade.</p>
@@ -8432,7 +8508,9 @@
 
         // Render the app
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<BodyTracker />);
+        root.render(<DisciplineTracker />);
     </script>
 </body>
 </html>
+
+
