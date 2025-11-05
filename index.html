@@ -1047,8 +1047,9 @@
           if (evaluations.length === 0)
             return { remaining: 0, accumulated: 0, initial: 0 };
 
-          // Déficit inicial (da primeira avaliação)
-          const first = evaluations[0];
+          // Déficit inicial (da primeira avaliação - mais antiga)
+          const sortedEvals = getSortedEvaluations(evaluations);
+          const first = sortedEvals[sortedEvals.length - 1]; // Mais antiga
           const firstBF = calculateBodyFat(first);
           const firstFatMass = (firstBF / 100) * first.weight;
           const targetFatMass = (targetBodyFat / 100) * first.weight;
@@ -9952,7 +9953,8 @@
 
                                 {/* Line path */}
                                 {(() => {
-                                  const weights = evaluations.map(
+                                  const sortedEvals = getSortedEvaluations(evaluations).reverse(); // Mais antiga primeiro
+                                  const weights = sortedEvals.map(
                                     (e) => e.weight
                                   );
                                   const minWeight = Math.min(...weights);
@@ -10077,7 +10079,8 @@
 
                                 {/* Line path with color based on trend */}
                                 {(() => {
-                                  const bfValues = evaluations.map((e) =>
+                                  const sortedEvals = getSortedEvaluations(evaluations).reverse(); // Mais antiga primeiro
+                                  const bfValues = sortedEvals.map((e) =>
                                     calculateBodyFat(e)
                                   );
                                   const minBF = Math.min(...bfValues);
@@ -10236,11 +10239,12 @@
 
                               {/* Calculate ranges */}
                               {(() => {
-                                const leanValues = evaluations.map(
+                                const sortedEvals = getSortedEvaluations(evaluations).reverse(); // Mais antiga primeiro
+                                const leanValues = sortedEvals.map(
                                   (e) =>
                                     e.weight * (1 - calculateBodyFat(e) / 100)
                                 );
-                                const fatValues = evaluations.map(
+                                const fatValues = sortedEvals.map(
                                   (e) => e.weight * (calculateBodyFat(e) / 100)
                                 );
                                 const allValues = [...leanValues, ...fatValues];
@@ -10335,11 +10339,12 @@
                             </svg>
                             <div className="absolute top-0 left-0 text-xs text-slate-400">
                               {(() => {
-                                const leanValues = evaluations.map(
+                                const sortedEvals = getSortedEvaluations(evaluations);
+                                const leanValues = sortedEvals.map(
                                   (e) =>
                                     e.weight * (1 - calculateBodyFat(e) / 100)
                                 );
-                                const fatValues = evaluations.map(
+                                const fatValues = sortedEvals.map(
                                   (e) => e.weight * (calculateBodyFat(e) / 100)
                                 );
                                 return Math.max(
@@ -10351,11 +10356,12 @@
                             </div>
                             <div className="absolute bottom-0 left-0 text-xs text-slate-400">
                               {(() => {
-                                const leanValues = evaluations.map(
+                                const sortedEvals = getSortedEvaluations(evaluations);
+                                const leanValues = sortedEvals.map(
                                   (e) =>
                                     e.weight * (1 - calculateBodyFat(e) / 100)
                                 );
-                                const fatValues = evaluations.map(
+                                const fatValues = sortedEvals.map(
                                   (e) => e.weight * (calculateBodyFat(e) / 100)
                                 );
                                 return Math.min(
@@ -10418,12 +10424,13 @@
                               })()}
                             </h4>
                             <div className="space-y-3">
-                              {evaluations.map((evaluation, idx) => {
+                              {getSortedEvaluations(evaluations).map((evaluation, idx) => {
                                 const bf = calculateBodyFat(evaluation);
                                 const leanMass =
                                   evaluation.weight * (1 - bf / 100);
+                                const sortedForMax = getSortedEvaluations(evaluations);
                                 const maxLean = Math.max(
-                                  ...evaluations.map(
+                                  ...sortedForMax.map(
                                     (e) =>
                                       e.weight * (1 - calculateBodyFat(e) / 100)
                                   )
