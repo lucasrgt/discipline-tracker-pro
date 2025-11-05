@@ -134,7 +134,17 @@
         );
 
         function BodyTracker() {
-            const [activeTab, setActiveTab] = useState('dashboard');
+            const [activeTab, setActiveTab] = useState(() => {
+                // Define aba inicial baseado nos módulos ativos
+                const savedFitnessMode = localStorage.getItem('fitnessModeEnabled');
+                const savedSpiritualMode = localStorage.getItem('spiritualModeEnabled');
+                const savedNofapMode = localStorage.getItem('nofapModeEnabled');
+                
+                if (savedFitnessMode === 'true' || savedFitnessMode === null) return 'dashboard';
+                if (savedSpiritualMode === 'true') return 'spiritual';
+                if (savedNofapMode === 'true') return 'nofap';
+                return 'dashboard';
+            });
             const [evaluations, setEvaluations] = useState([]);
             const [dailyLogs, setDailyLogs] = useState([]);
             const [showAddEval, setShowAddEval] = useState(false);
@@ -147,11 +157,13 @@
             const [targetBodyFat, setTargetBodyFat] = useState(6.0);
             const [isSetupComplete, setIsSetupComplete] = useState(false);
             const [showImportOnWelcome, setShowImportOnWelcome] = useState(false);
+            const [showModuleSelection, setShowModuleSelection] = useState(false); // Tela de seleção de módulos
             const [dismissedGoodAlert, setDismissedGoodAlert] = useState(false);
             const [calendarView, setCalendarView] = useState('monthly');
             const [showSettingsModal, setShowSettingsModal] = useState(false);
             
             // Módulos opcionais
+            const [fitnessModeEnabled, setFitnessModeEnabled] = useState(true); // Fitness habilitado por padrão
             const [spiritualModeEnabled, setSpiritualModeEnabled] = useState(false);
             const [nofapModeEnabled, setNofapModeEnabled] = useState(false);
             const [spiritualLogs, setSpiritualLogs] = useState([]);
@@ -329,6 +341,7 @@
                 const savedBasal = localStorage.getItem('basalCalories');
                 const savedTargetBF = localStorage.getItem('targetBodyFat');
                 const setupComplete = localStorage.getItem('setupComplete');
+                const savedFitnessMode = localStorage.getItem('fitnessModeEnabled');
                 const savedSpiritualMode = localStorage.getItem('spiritualModeEnabled');
                 const savedNofapMode = localStorage.getItem('nofapModeEnabled');
                 const savedSpiritualLogs = localStorage.getItem('spiritualLogs');
@@ -338,6 +351,7 @@
                 if (savedLogs) setDailyLogs(JSON.parse(savedLogs));
                 if (savedBasal) setBasalCalories(Number(savedBasal));
                 if (savedTargetBF) setTargetBodyFat(Number(savedTargetBF));
+                if (savedFitnessMode !== null) setFitnessModeEnabled(savedFitnessMode === 'true');
                 if (savedSpiritualMode) setSpiritualModeEnabled(savedSpiritualMode === 'true');
                 if (savedNofapMode) setNofapModeEnabled(savedNofapMode === 'true');
                 if (savedSpiritualLogs) setSpiritualLogs(JSON.parse(savedSpiritualLogs));
@@ -367,6 +381,10 @@
             useEffect(() => {
                 localStorage.setItem('targetBodyFat', targetBodyFat.toString());
             }, [targetBodyFat]);
+
+            useEffect(() => {
+                localStorage.setItem('fitnessModeEnabled', fitnessModeEnabled.toString());
+            }, [fitnessModeEnabled]);
 
             useEffect(() => {
                 localStorage.setItem('spiritualModeEnabled', spiritualModeEnabled.toString());
@@ -1083,11 +1101,11 @@
                                     </button>
                                     
                                     <button
-                                        onClick={() => setIsSetupComplete('setup')}
+                                        onClick={() => setShowModuleSelection(true)}
                                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all transform hover:scale-105"
                                     >
                                         <Plus className="h-6 w-6" />
-                                        Começar do Zero - Setup Inicial
+                                        Começar do Zero - Escolher Módulos
                                     </button>
                                 </div>
 
@@ -1149,7 +1167,180 @@
                 );
             }
 
-            // Setup Form for new users
+            // Module Selection Screen
+            if (!isSetupComplete && showModuleSelection) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 flex items-center justify-center">
+                        <div className="max-w-3xl w-full">
+                            <div className="text-center mb-8">
+                                <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                                    Escolha seus Módulos
+                                </h1>
+                                <p className="text-slate-400">Selecione quais áreas você quer acompanhar</p>
+                            </div>
+
+                            <div className="bg-slate-800/80 backdrop-blur rounded-2xl p-8 border border-slate-700 shadow-2xl">
+                                <div className="space-y-4">
+                                    {/* Fitness Module */}
+                                    <div 
+                                        onClick={() => setFitnessModeEnabled(!fitnessModeEnabled)}
+                                        className={`p-6 rounded-xl border-2 cursor-pointer transition-all transform hover:scale-102 ${
+                                            fitnessModeEnabled 
+                                                ? 'bg-blue-900/30 border-blue-500 shadow-lg shadow-blue-500/20' 
+                                                : 'bg-slate-700/30 border-slate-600 hover:border-slate-500'
+                                        }`}
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                                fitnessModeEnabled ? 'bg-blue-500 border-blue-500' : 'border-slate-500'
+                                            }`}>
+                                                {fitnessModeEnabled && (
+                                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                                                    💪 Fitness & Nutrição
+                                                </h3>
+                                                <p className="text-sm text-slate-300 mb-3">
+                                                    Acompanhe peso, dobras cutâneas, % de gordura, calorias diárias, deficit calórico e evolução corporal.
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    <span className="text-xs bg-blue-900/50 text-blue-200 px-2 py-1 rounded">Avaliações Físicas</span>
+                                                    <span className="text-xs bg-blue-900/50 text-blue-200 px-2 py-1 rounded">Logs Diários</span>
+                                                    <span className="text-xs bg-blue-900/50 text-blue-200 px-2 py-1 rounded">Deficit Calórico</span>
+                                                    <span className="text-xs bg-blue-900/50 text-blue-200 px-2 py-1 rounded">Metas de BF%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Spiritual Module */}
+                                    <div 
+                                        onClick={() => setSpiritualModeEnabled(!spiritualModeEnabled)}
+                                        className={`p-6 rounded-xl border-2 cursor-pointer transition-all transform hover:scale-102 ${
+                                            spiritualModeEnabled 
+                                                ? 'bg-purple-900/30 border-purple-500 shadow-lg shadow-purple-500/20' 
+                                                : 'bg-slate-700/30 border-slate-600 hover:border-slate-500'
+                                        }`}
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                                spiritualModeEnabled ? 'bg-purple-500 border-purple-500' : 'border-slate-500'
+                                            }`}>
+                                                {spiritualModeEnabled && (
+                                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                                                    🧘 Journal Espiritual
+                                                </h3>
+                                                <p className="text-sm text-slate-300 mb-3">
+                                                    Registre práticas de meditação, gratidão, caridade e acompanhe sua jornada espiritual.
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    <span className="text-xs bg-purple-900/50 text-purple-200 px-2 py-1 rounded">Meditações</span>
+                                                    <span className="text-xs bg-purple-900/50 text-purple-200 px-2 py-1 rounded">Calendário</span>
+                                                    <span className="text-xs bg-purple-900/50 text-purple-200 px-2 py-1 rounded">Insights</span>
+                                                    <span className="text-xs bg-purple-900/50 text-purple-200 px-2 py-1 rounded">Reflexões</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* NoFap Module */}
+                                    <div 
+                                        onClick={() => setNofapModeEnabled(!nofapModeEnabled)}
+                                        className={`p-6 rounded-xl border-2 cursor-pointer transition-all transform hover:scale-102 ${
+                                            nofapModeEnabled 
+                                                ? 'bg-cyan-900/30 border-cyan-500 shadow-lg shadow-cyan-500/20' 
+                                                : 'bg-slate-700/30 border-slate-600 hover:border-slate-500'
+                                        }`}
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                                nofapModeEnabled ? 'bg-cyan-500 border-cyan-500' : 'border-slate-500'
+                                            }`}>
+                                                {nofapModeEnabled && (
+                                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                                                    🎯 NoFap Tracker
+                                                </h3>
+                                                <p className="text-sm text-slate-300 mb-3">
+                                                    Acompanhe sua jornada de autocontrole, registre dias limpos e gerencie urges.
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    <span className="text-xs bg-cyan-900/50 text-cyan-200 px-2 py-1 rounded">Contador de Dias</span>
+                                                    <span className="text-xs bg-cyan-900/50 text-cyan-200 px-2 py-1 rounded">Urges</span>
+                                                    <span className="text-xs bg-cyan-900/50 text-cyan-200 px-2 py-1 rounded">Streaks</span>
+                                                    <span className="text-xs bg-cyan-900/50 text-cyan-200 px-2 py-1 rounded">Estatísticas</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="mt-8 space-y-3">
+                                    {(!fitnessModeEnabled && !spiritualModeEnabled && !nofapModeEnabled) && (
+                                        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3 text-center">
+                                            <p className="text-sm text-yellow-300">⚠️ Selecione pelo menos um módulo para continuar</p>
+                                        </div>
+                                    )}
+                                    
+                                    <button
+                                        onClick={() => {
+                                            if (!fitnessModeEnabled && !spiritualModeEnabled && !nofapModeEnabled) {
+                                                alert('Por favor, selecione pelo menos um módulo!');
+                                                return;
+                                            }
+                                            
+                                            // Se fitness está ativado, vai pro setup do fitness
+                                            if (fitnessModeEnabled) {
+                                                setIsSetupComplete('setup');
+                                                setShowModuleSelection(false);
+                                            } else {
+                                                // Se fitness não está ativado, pula o setup e vai direto pro app
+                                                localStorage.setItem('setupComplete', 'true');
+                                                setIsSetupComplete(true);
+                                                setShowModuleSelection(false);
+                                            }
+                                        }}
+                                        disabled={!fitnessModeEnabled && !spiritualModeEnabled && !nofapModeEnabled}
+                                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-slate-600 disabled:to-slate-600 disabled:cursor-not-allowed px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all transform hover:scale-105 disabled:transform-none"
+                                    >
+                                        <CheckCircle2 className="h-6 w-6" />
+                                        {fitnessModeEnabled ? 'Continuar para Setup Fitness' : 'Começar a Usar!'}
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() => setShowModuleSelection(false)}
+                                        className="w-full bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-lg font-semibold transition-all"
+                                    >
+                                        ← Voltar
+                                    </button>
+                                </div>
+
+                                <div className="mt-6 text-center text-xs text-slate-400">
+                                    💡 Você pode ativar ou desativar módulos depois nas configurações
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Setup Form for new users (only for Fitness module)
             if (isSetupComplete === 'setup') {
                 return (
                     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4">
@@ -2547,14 +2738,51 @@
                                         </div>
 
                                         {/* Optional Modules */}
-                                        <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 rounded-xl p-6 border-2 border-purple-500/30">
+                                        <div className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-xl p-6 border-2 border-blue-500/30">
                                             <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                                                <span className="text-3xl">🔮</span>
-                                                Módulos Opcionais
+                                                <span className="text-3xl">🎛️</span>
+                                                Módulos do Sistema
                                             </h3>
-                                            <p className="text-sm text-slate-400 mb-6">Ative funcionalidades extras para uma transformação completa</p>
+                                            <p className="text-sm text-slate-400 mb-6">Ative ou desative módulos conforme suas necessidades</p>
                                             
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                {/* Fitness Mode Toggle */}
+                                                <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-600">
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-3xl">💪</span>
+                                                            <div>
+                                                                <h4 className="font-bold text-lg">Fitness</h4>
+                                                                <p className="text-xs text-slate-400">Corpo & Nutrição</p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                if (fitnessModeEnabled && !spiritualModeEnabled && !nofapModeEnabled) {
+                                                                    alert('⚠️ Você precisa ter pelo menos um módulo ativo!');
+                                                                    return;
+                                                                }
+                                                                setFitnessModeEnabled(!fitnessModeEnabled);
+                                                                // Se desativar fitness, muda pra primeira aba disponível
+                                                                if (fitnessModeEnabled) {
+                                                                    if (spiritualModeEnabled) setActiveTab('spiritual');
+                                                                    else if (nofapModeEnabled) setActiveTab('nofap');
+                                                                }
+                                                            }}
+                                                            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                                                                fitnessModeEnabled ? 'bg-green-600' : 'bg-slate-600'
+                                                            }`}
+                                                        >
+                                                            <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                                                                fitnessModeEnabled ? 'translate-x-7' : 'translate-x-1'
+                                                            }`} />
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-sm text-slate-300">
+                                                        Avaliações físicas, % de gordura, calorias e déficit
+                                                    </p>
+                                                </div>
+
                                                 {/* Spiritual Mode Toggle */}
                                                 <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-600">
                                                     <div className="flex items-center justify-between mb-3">
@@ -2566,7 +2794,13 @@
                                                             </div>
                                                         </div>
                                                         <button
-                                                            onClick={() => setSpiritualModeEnabled(!spiritualModeEnabled)}
+                                                            onClick={() => {
+                                                                if (spiritualModeEnabled && !fitnessModeEnabled && !nofapModeEnabled) {
+                                                                    alert('⚠️ Você precisa ter pelo menos um módulo ativo!');
+                                                                    return;
+                                                                }
+                                                                setSpiritualModeEnabled(!spiritualModeEnabled);
+                                                            }}
                                                             className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
                                                                 spiritualModeEnabled ? 'bg-green-600' : 'bg-slate-600'
                                                             }`}
@@ -2585,14 +2819,20 @@
                                                 <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-600">
                                                     <div className="flex items-center justify-between mb-3">
                                                         <div className="flex items-center gap-3">
-                                                            <span className="text-3xl">💪</span>
+                                                            <span className="text-3xl">🎯</span>
                                                             <div>
-                                                                <h4 className="font-bold text-lg">Modo NoFap</h4>
+                                                                <h4 className="font-bold text-lg">NoFap</h4>
                                                                 <p className="text-xs text-slate-400">Controle & Disciplina</p>
                                                             </div>
                                                         </div>
                                                         <button
-                                                            onClick={() => setNofapModeEnabled(!nofapModeEnabled)}
+                                                            onClick={() => {
+                                                                if (nofapModeEnabled && !fitnessModeEnabled && !spiritualModeEnabled) {
+                                                                    alert('⚠️ Você precisa ter pelo menos um módulo ativo!');
+                                                                    return;
+                                                                }
+                                                                setNofapModeEnabled(!nofapModeEnabled);
+                                                            }}
                                                             className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
                                                                 nofapModeEnabled ? 'bg-green-600' : 'bg-slate-600'
                                                             }`}
@@ -2722,50 +2962,54 @@
 
                         {/* Tabs */}
                         <div className="flex gap-2 mb-6 bg-slate-800/50 p-2 rounded-xl overflow-x-auto">
-                            <button
-                                onClick={() => setActiveTab('dashboard')}
-                                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
-                                    activeTab === 'dashboard' 
-                                        ? 'bg-blue-600 text-white shadow-lg' 
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-700'
-                                }`}
-                            >
-                                <Target className="inline mr-2 h-5 w-5" />
-                                Dashboard
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('evaluations')}
-                                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
-                                    activeTab === 'evaluations' 
-                                        ? 'bg-blue-600 text-white shadow-lg' 
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-700'
-                                }`}
-                            >
-                                <Scale className="inline mr-2 h-5 w-5" />
-                                Avaliações Físicas
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('logs')}
-                                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
-                                    activeTab === 'logs' 
-                                        ? 'bg-blue-600 text-white shadow-lg' 
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-700'
-                                }`}
-                            >
-                                <Calendar className="inline mr-2 h-5 w-5" />
-                                Registro Diário
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('charts')}
-                                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
-                                    activeTab === 'charts' 
-                                        ? 'bg-blue-600 text-white shadow-lg' 
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-700'
-                                }`}
-                            >
-                                <TrendingUp className="inline mr-2 h-5 w-5" />
-                                Gráficos
-                            </button>
+                            {fitnessModeEnabled && (
+                                <>
+                                    <button
+                                        onClick={() => setActiveTab('dashboard')}
+                                        className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
+                                            activeTab === 'dashboard' 
+                                                ? 'bg-blue-600 text-white shadow-lg' 
+                                                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                        }`}
+                                    >
+                                        <Target className="inline mr-2 h-5 w-5" />
+                                        Dashboard
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('evaluations')}
+                                        className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
+                                            activeTab === 'evaluations' 
+                                                ? 'bg-blue-600 text-white shadow-lg' 
+                                                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                        }`}
+                                    >
+                                        <Scale className="inline mr-2 h-5 w-5" />
+                                        Avaliações Físicas
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('logs')}
+                                        className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
+                                            activeTab === 'logs' 
+                                                ? 'bg-blue-600 text-white shadow-lg' 
+                                                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                        }`}
+                                    >
+                                        <Calendar className="inline mr-2 h-5 w-5" />
+                                        Registro Diário
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('charts')}
+                                        className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
+                                            activeTab === 'charts' 
+                                                ? 'bg-blue-600 text-white shadow-lg' 
+                                                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                        }`}
+                                    >
+                                        <TrendingUp className="inline mr-2 h-5 w-5" />
+                                        Gráficos
+                                    </button>
+                                </>
+                            )}
                             {spiritualModeEnabled && (
                                 <button
                                     onClick={() => setActiveTab('spiritual')}
