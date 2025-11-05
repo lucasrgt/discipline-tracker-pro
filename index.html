@@ -1341,16 +1341,30 @@
             }
 
             // Theme classes
-            const bgMain = theme === 'dark' 
+            const isDark = theme === 'dark';
+            const bgMain = isDark 
                 ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white' 
                 : 'bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900';
             
-            const cardBg = theme === 'dark' ? 'bg-slate-800/50' : 'bg-white/80';
-            const cardBorder = theme === 'dark' ? 'border-slate-700' : 'border-slate-200';
-            const textPrimary = theme === 'dark' ? 'text-white' : 'text-slate-900';
-            const textSecondary = theme === 'dark' ? 'text-slate-400' : 'text-slate-600';
-            const inputBg = theme === 'dark' ? 'bg-slate-700' : 'bg-white';
-            const inputBorder = theme === 'dark' ? 'border-slate-600' : 'border-slate-300';
+            const cardBg = isDark ? 'bg-slate-800/50' : 'bg-white';
+            const cardBgAlt = isDark ? 'bg-slate-800/80' : 'bg-white/90';
+            const cardBorder = isDark ? 'border-slate-700' : 'border-slate-300';
+            const textPrimary = isDark ? 'text-white' : 'text-slate-900';
+            const textSecondary = isDark ? 'text-slate-400' : 'text-slate-600';
+            const textTertiary = isDark ? 'text-slate-500' : 'text-slate-500';
+            const inputBg = isDark ? 'bg-slate-700' : 'bg-white';
+            const inputBorder = isDark ? 'border-slate-600' : 'border-slate-300';
+            const inputText = isDark ? 'text-white' : 'text-slate-900';
+            const hoverBg = isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-100';
+            const modalBg = isDark ? 'bg-slate-900' : 'bg-white';
+            const modalOverlay = isDark ? 'bg-black/80' : 'bg-black/50';
+            const buttonBg = isDark ? 'bg-slate-700' : 'bg-slate-200';
+            const buttonHover = isDark ? 'hover:bg-slate-600' : 'hover:bg-slate-300';
+            const dividerColor = isDark ? 'border-slate-700' : 'border-slate-200';
+            const standardCard = isDark 
+                ? 'bg-slate-800/50 backdrop-blur border-slate-700' 
+                : 'bg-white border-slate-300 shadow-sm';
+            const standardCardText = isDark ? 'text-slate-300' : 'text-slate-700';
 
             return (
                 <div className={`min-h-screen ${bgMain} p-4`}>
@@ -2517,20 +2531,20 @@
 
                         {/* Settings Modal */}
                         {showSettingsModal && (
-                            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                                <div className="bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border-2 border-slate-700 shadow-2xl">
+                            <div className={`fixed inset-0 ${modalOverlay} backdrop-blur-sm z-50 flex items-center justify-center p-4`}>
+                                <div className={`${modalBg} rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border-2 ${cardBorder} shadow-2xl`}>
                                     {/* Modal Header */}
-                                    <div className="sticky top-0 bg-slate-900 border-b border-slate-700 p-6 flex items-center justify-between">
+                                    <div className={`sticky top-0 ${modalBg} border-b ${dividerColor} p-6 flex items-center justify-between`}>
                                         <div>
-                                            <h2 className="text-3xl font-bold flex items-center gap-3">
+                                            <h2 className={`text-3xl font-bold flex items-center gap-3 ${textPrimary}`}>
                                                 <Settings className="h-8 w-8 text-purple-400" />
                                                 Configurações
                                             </h2>
-                                            <p className="text-slate-400 mt-1">Personalize sua experiência</p>
+                                            <p className={`${textSecondary} mt-1`}>Personalize sua experiência</p>
                                         </div>
                                         <button
                                             onClick={() => setShowSettingsModal(false)}
-                                            className="bg-slate-700 hover:bg-slate-600 p-2 rounded-lg transition-all"
+                                            className={`${buttonBg} ${buttonHover} p-2 rounded-lg transition-all`}
                                         >
                                             <X className="h-6 w-6" />
                                         </button>
@@ -2733,7 +2747,7 @@
                             >
                                 Body Tracker Pro
                             </h1>
-                            <p className="text-slate-400">Sua jornada rumo aos {targetBodyFat}% de gordura corporal</p>
+                            <p className={textSecondary}>Sua jornada rumo aos {targetBodyFat}% de gordura corporal</p>
                             
                             {/* Import/Export Buttons */}
                             <div className="flex gap-3 justify-center mt-4">
@@ -2758,13 +2772,13 @@
                         </div>
 
                         {/* Tabs */}
-                        <div className="flex gap-2 mb-6 bg-slate-800/50 p-2 rounded-xl overflow-x-auto">
+                        <div className={`flex gap-2 mb-6 ${cardBg} p-2 rounded-xl overflow-x-auto border ${cardBorder}`}>
                             <button
                                 onClick={() => setActiveTab('dashboard')}
                                 className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
                                     activeTab === 'dashboard' 
                                         ? 'bg-blue-600 text-white shadow-lg' 
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                        : `${textSecondary} ${hoverBg}`
                                 }`}
                             >
                                 <Target className="inline mr-2 h-5 w-5" />
@@ -2775,7 +2789,7 @@
                                 className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
                                     activeTab === 'evaluations' 
                                         ? 'bg-blue-600 text-white shadow-lg' 
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                        : `${textSecondary} ${hoverBg}`
                                 }`}
                             >
                                 <Scale className="inline mr-2 h-5 w-5" />
@@ -2786,7 +2800,7 @@
                                 className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
                                     activeTab === 'logs' 
                                         ? 'bg-blue-600 text-white shadow-lg' 
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                        : `${textSecondary} ${hoverBg}`
                                 }`}
                             >
                                 <Calendar className="inline mr-2 h-5 w-5" />
@@ -2797,7 +2811,7 @@
                                 className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all whitespace-nowrap ${
                                     activeTab === 'charts' 
                                         ? 'bg-blue-600 text-white shadow-lg' 
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                        : `${textSecondary} ${hoverBg}`
                                 }`}
                             >
                                 <TrendingUp className="inline mr-2 h-5 w-5" />
@@ -3331,22 +3345,22 @@
                                 {/* Stats Grid - Row 1 */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {/* Current BF% */}
-                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                    <div className={`${standardCard} rounded-xl p-6 border`}>
                                         <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-lg font-semibold text-slate-300">BF% Atual</h3>
+                                            <h3 className={`text-lg font-semibold ${standardCardText}`}>BF% Atual</h3>
                                             <TrendingDown className="h-6 w-6 text-blue-400" />
                                         </div>
                                         <div className="text-4xl font-bold text-blue-400">
                                             {safeFixed(stats.currentBF, 1)}%
                                         </div>
-                                        <div className="text-sm text-slate-400 mt-2">Meta: {targetBodyFat}%</div>
-                                        <div className="text-sm text-slate-400">Diferença: {safeFixed(stats.currentBF - targetBodyFat, 1)}%</div>
+                                        <div className={`text-sm ${textSecondary} mt-2`}>Meta: {targetBodyFat}%</div>
+                                        <div className={`text-sm ${textSecondary}`}>Diferença: {safeFixed(stats.currentBF - targetBodyFat, 1)}%</div>
                                     </div>
 
                                     {/* Fat to Lose */}
-                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
+                                    <div className={`${standardCard} rounded-xl p-6 border`}>
                                         <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-lg font-semibold text-slate-300">Gordura a Perder</h3>
+                                            <h3 className={`text-lg font-semibold ${standardCardText}`}>Gordura a Perder</h3>
                                             <Scale className="h-6 w-6 text-purple-400" />
                                         </div>
                                         <div className="text-4xl font-bold text-purple-400">
@@ -7011,18 +7025,18 @@
                                                     })()}
                                                     
                                                     {/* Calendário estilo GitHub */}
-                                                    <div className="mb-6">
+                                                    <div className="mb-6 max-w-md">
                                                         {/* Dias da semana */}
-                                                        <div className="grid grid-cols-7 gap-1.5 mb-1.5">
+                                                        <div className="grid grid-cols-15 gap-1 mb-1">
                                                             {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-                                                                <div key={day} className="text-[10px] text-slate-400 text-center font-semibold">
+                                                                <div key={day} className="text-[9px] text-slate-400 text-center font-semibold">
                                                                     {day}
                                                                 </div>
                                                             ))}
                                                         </div>
                                                         
                                                         {/* Grid de dias */}
-                                                        <div className="grid grid-cols-7 gap-1.5">
+                                                        <div className="grid grid-cols-7 gap-1">
                                                             {calendarDays.map((day, idx) => {
                                                                 if (day === null) {
                                                                     return <div key={`empty-${idx}`} className="aspect-square"></div>;
@@ -7072,11 +7086,11 @@
                                                                         key={day}
                                                                         onClick={() => setSelectedSpiritualDay(log ? dateStr : null)}
                                                                         disabled={!log}
-                                                                        className={`aspect-square rounded-md border transition-all flex items-center justify-center text-xs font-semibold
+                                                                        className={`aspect-square rounded border transition-all flex items-center justify-center text-[10px] font-semibold
                                                                             ${colorClasses[quality]}
-                                                                            ${isSelected ? 'ring-2 ring-purple-400 scale-110' : ''}
-                                                                            ${isToday ? 'ring-2 ring-cyan-400' : ''}
-                                                                            ${log ? 'hover:scale-110 cursor-pointer' : 'cursor-default opacity-40'}
+                                                                            ${isSelected ? 'ring-1 ring-purple-400 scale-105' : ''}
+                                                                            ${isToday ? 'ring-1 ring-cyan-400' : ''}
+                                                                            ${log ? 'hover:scale-105 cursor-pointer' : 'cursor-default opacity-40'}
                                                                         `}
                                                                         title={log ? `${day} - ${log.meditations?.length || 0} meditações` : `${day} - Sem registro`}
                                                                     >
