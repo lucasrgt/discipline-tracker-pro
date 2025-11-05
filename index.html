@@ -142,6 +142,7 @@
             const [editingEval, setEditingEval] = useState(null); // ID da avaliação sendo editada
             const [editingLog, setEditingLog] = useState(null); // ID do log sendo editado
             const [dailyLogViewDate, setDailyLogViewDate] = useState(new Date()); // Data de navegação nos logs
+            const [deficitViewMode, setDeficitViewMode] = useState('real'); // 'real' ou 'simulado'
             const [basalCalories, setBasalCalories] = useState(2300);
             const [targetBodyFat, setTargetBodyFat] = useState(6.0);
             const [isSetupComplete, setIsSetupComplete] = useState(false);
@@ -268,6 +269,7 @@
                 date: new Date().toISOString().split('T')[0],
                 weight: '',
                 basalCalories: '',
+                targetBodyFat: '',
                 triceps: '',
                 subscapular: '',
                 chest: '',
@@ -425,8 +427,8 @@
 
             // Complete initial setup
             const completeSetup = () => {
-                if (!setupData.weight || !setupData.basalCalories || !setupData.triceps) {
-                    alert('⚠️ Por favor, preencha pelo menos: Peso, Calorias Basais e Triceps');
+                if (!setupData.weight || !setupData.basalCalories || !setupData.triceps || !setupData.targetBodyFat) {
+                    alert('⚠️ Por favor, preencha pelo menos: Peso, Calorias Basais, % de Gordura Desejado e Triceps');
                     return;
                 }
 
@@ -447,8 +449,10 @@
                 // Save everything
                 setEvaluations([initialEval]);
                 setBasalCalories(Number(setupData.basalCalories));
+                setTargetBodyFat(Number(setupData.targetBodyFat));
                 localStorage.setItem('bodyEvaluations', JSON.stringify([initialEval]));
                 localStorage.setItem('basalCalories', setupData.basalCalories);
+                localStorage.setItem('targetBodyFat', setupData.targetBodyFat);
                 localStorage.setItem('setupComplete', 'true');
                 setIsSetupComplete(true);
             };
@@ -629,6 +633,35 @@
                 const fastingDays = dailyLogs.filter(log => log.isFasting).length;
                 
                 return { totalConsumed, totalBasal, actualDeficit, daysLogged: last7Days.length, fastingDays, totalExerciseCalories };
+            };
+
+            // Calcula déficit simulado baseado nos logs diários
+            const getSimulatedDeficit = () => {
+                if (evaluations.length === 0) return { remaining: 0, accumulated: 0, initial: 0 };
+                
+                // Déficit inicial (da primeira avaliação)
+                const first = evaluations[0];
+                const firstBF = calculateBodyFat(first);
+                const firstFatMass = (firstBF / 100) * first.weight;
+                const targetFatMass = (targetBodyFat / 100) * first.weight;
+                const initialFatToLose = firstFatMass - targetFatMass;
+                const initialDeficit = initialFatToLose * 7700;
+                
+                // Acumula déficit de todos os logs diários
+                const totalAccumulated = dailyLogs.reduce((sum, log) => {
+                    const exerciseTotal = (log.exerciseCalories?.strength || 0) + (log.exerciseCalories?.cardio || 0);
+                    const dailyDeficit = (basalCalories + exerciseTotal) - log.calories;
+                    return sum + dailyDeficit;
+                }, 0);
+                
+                // Déficit restante simulado
+                const remainingSimulated = Math.max(0, initialDeficit - totalAccumulated);
+                
+                return {
+                    remaining: remainingSimulated,
+                    accumulated: totalAccumulated,
+                    initial: initialDeficit
+                };
             };
 
             // Check recent performance and generate alerts
@@ -1008,6 +1041,7 @@
 
             const stats = calculateDeficitNeeded();
             const caloriesStats = getTotalCaloriesStats();
+            const simulatedDeficit = getSimulatedDeficit();
 
             // Welcome Screen for new users
             if (!isSetupComplete && !showImportOnWelcome) {
@@ -1125,7 +1159,7 @@
                                             <Scale className="mr-3 h-8 w-8 text-blue-400" />
                                             Informações Básicas
                                         </h2>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                             <div>
                                                 <label className="block text-sm text-slate-400 mb-2">Data da Avaliação *</label>
                                                 <input
@@ -1156,9 +1190,20 @@
                                                     placeholder="Ex: 2300"
                                                 />
                                             </div>
+                                            <div>
+                                                <label className="block text-sm text-slate-400 mb-2">% de Gordura Desejado *</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={setupData.targetBodyFat}
+                                                    onChange={(e) => setSetupData({...setupData, targetBodyFat: e.target.value})}
+                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
+                                                    placeholder="Ex: 10"
+                                                />
+                                            </div>
                                         </div>
                                         <p className="text-xs text-slate-500 mt-2">
-                                            💡 Suas calorias de manutenção são as calorias que você precisa consumir para manter seu peso atual
+                                            💡 Suas calorias de manutenção são as calorias que você precisa consumir para manter seu peso atual. O % de gordura desejado é sua meta final.
                                         </p>
                                     </div>
 
@@ -3151,26 +3196,86 @@
                                     );
                                 })()}
 
-                                {/* Main Calories Display */}
-                                <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-8 shadow-2xl text-center">
-                                    <div className="flex items-center justify-center mb-4">
-                                        <Flame className="h-12 w-12 mr-3 text-orange-300" />
-                                        <h2 className="text-2xl font-bold">Deficit Calórico Total Necessário</h2>
+                                {/* Main Calories Display with Tabs */}
+                                <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-2xl overflow-hidden">
+                                    {/* Tabs Header */}
+                                    <div className="flex border-b border-white/20">
+                                        <button
+                                            onClick={() => setDeficitViewMode('real')}
+                                            className={`flex-1 py-4 px-6 font-semibold transition-all ${
+                                                deficitViewMode === 'real' 
+                                                    ? 'bg-white/20 text-white' 
+                                                    : 'bg-transparent text-blue-100 hover:bg-white/10'
+                                            }`}
+                                        >
+                                            📊 Déficit Real (BF%)
+                                        </button>
+                                        <button
+                                            onClick={() => setDeficitViewMode('simulado')}
+                                            className={`flex-1 py-4 px-6 font-semibold transition-all ${
+                                                deficitViewMode === 'simulado' 
+                                                    ? 'bg-white/20 text-white' 
+                                                    : 'bg-transparent text-blue-100 hover:bg-white/10'
+                                            }`}
+                                        >
+                                            🔥 Contador Simulado
+                                        </button>
                                     </div>
-                                    <div className="text-7xl font-bold mb-2">
-                                        {Math.round(stats.deficit).toLocaleString()}
-                                    </div>
-                                    <div className="text-2xl text-blue-100">kcal restantes até {targetBodyFat}% gordura</div>
-                                    <div className="mt-6 text-lg text-blue-100">
-                                        ~{stats.daysNeeded} dias para atingir a meta
-                                    </div>
-                                    <div className="text-xs text-blue-200 mt-3">
-                                        {caloriesStats.daysLogged > 0 
-                                            ? `Baseado na sua média de ${stats.avgDailyDeficit} kcal/dia de deficit` 
-                                            : 'Estimativa baseada em 500 kcal/dia de deficit'}
-                                    </div>
-                                    <div className="text-xs text-blue-100/70 mt-1">
-                                        O sistema é inteligente e ajusta automaticamente baseado no seu histórico
+
+                                    {/* Tab Content */}
+                                    <div className="p-8 text-center">
+                                        {deficitViewMode === 'real' ? (
+                                            // Aba Real - baseado no BF% atual
+                                            <>
+                                                <div className="flex items-center justify-center mb-4">
+                                                    <Flame className="h-12 w-12 mr-3 text-orange-300" />
+                                                    <h2 className="text-2xl font-bold">Déficit Calórico Real</h2>
+                                                </div>
+                                                <div className="text-7xl font-bold mb-2">
+                                                    {Math.round(stats.deficit).toLocaleString()}
+                                                </div>
+                                                <div className="text-2xl text-blue-100">kcal restantes até {targetBodyFat}% gordura</div>
+                                                <div className="mt-6 text-lg text-blue-100">
+                                                    ~{stats.daysNeeded} dias para atingir a meta
+                                                </div>
+                                                <div className="text-xs text-blue-200 mt-3">
+                                                    {caloriesStats.daysLogged > 0 
+                                                        ? `Baseado na sua média de ${stats.avgDailyDeficit} kcal/dia de deficit` 
+                                                        : 'Estimativa baseada em 500 kcal/dia de deficit'}
+                                                </div>
+                                                <div className="text-xs text-blue-100/70 mt-1">
+                                                    Calculado com base no seu BF% atual da última avaliação física
+                                                </div>
+                                            </>
+                                        ) : (
+                                            // Aba Simulado - baseado nos logs diários
+                                            <>
+                                                <div className="flex items-center justify-center mb-4">
+                                                    <Flame className="h-12 w-12 mr-3 text-orange-300" />
+                                                    <h2 className="text-2xl font-bold">Contador Simulado</h2>
+                                                </div>
+                                                <div className="text-7xl font-bold mb-2">
+                                                    {Math.round(simulatedDeficit.remaining).toLocaleString()}
+                                                </div>
+                                                <div className="text-2xl text-blue-100">kcal restantes (simulado)</div>
+                                                <div className="mt-6 grid grid-cols-2 gap-4 text-center">
+                                                    <div className="bg-white/10 rounded-lg p-4">
+                                                        <div className="text-sm text-blue-200 mb-1">Déficit Inicial</div>
+                                                        <div className="text-2xl font-bold">{Math.round(simulatedDeficit.initial).toLocaleString()}</div>
+                                                    </div>
+                                                    <div className="bg-white/10 rounded-lg p-4">
+                                                        <div className="text-sm text-blue-200 mb-1">Já Queimado</div>
+                                                        <div className="text-2xl font-bold text-green-300">{Math.round(simulatedDeficit.accumulated).toLocaleString()}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-xs text-blue-200 mt-4">
+                                                    Soma de todos os déficits diários dos seus {dailyLogs.length} registros
+                                                </div>
+                                                <div className="text-xs text-blue-100/70 mt-1">
+                                                    Este é um contador simulado que desconta cada dia registrado
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 
