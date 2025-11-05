@@ -469,8 +469,18 @@
         const formatDateShort = (dateStr) => {
           const date = parseDateString(dateStr);
           const months = [
-            "jan.", "fev.", "mar.", "abr.", "mai.", "jun.",
-            "jul.", "ago.", "set.", "out.", "nov.", "dez."
+            "jan.",
+            "fev.",
+            "mar.",
+            "abr.",
+            "mai.",
+            "jun.",
+            "jul.",
+            "ago.",
+            "set.",
+            "out.",
+            "nov.",
+            "dez.",
           ];
           return `${date.getDate()} de ${months[date.getMonth()]}`;
         };
@@ -1075,10 +1085,13 @@
 
           // Acumula déficit de todos os logs diários
           const totalAccumulated = dailyLogs.reduce((sum, log) => {
+            if (log.isFasting) {
+              return sum + basalCalories;
+            }
             const exerciseTotal =
               (log.exerciseCalories?.strength || 0) +
               (log.exerciseCalories?.cardio || 0);
-            const dailyDeficit = basalCalories + exerciseTotal - log.calories;
+            const dailyDeficit = basalCalories + exerciseTotal - (log.calories || 0);
             return sum + dailyDeficit;
           }, 0);
 
@@ -12031,7 +12044,9 @@
                                   <div
                                     key={dateStr}
                                     className={`w-full aspect-square rounded ${bgColor} transition-all hover:scale-110 cursor-pointer`}
-                                    title={`${formatDateString(dateStr)} - ${title}`}
+                                    title={`${formatDateString(
+                                      dateStr
+                                    )} - ${title}`}
                                   />
                                 );
                               }
@@ -13947,7 +13962,9 @@
                                   <div
                                     key={dateStr}
                                     className={`w-full aspect-square rounded ${bgColor} transition-all hover:scale-110 cursor-pointer`}
-                                    title={`${formatDateString(dateStr)} - ${title}`}
+                                    title={`${formatDateString(
+                                      dateStr
+                                    )} - ${title}`}
                                   />
                                 );
                               }
