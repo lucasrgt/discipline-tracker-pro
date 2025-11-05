@@ -4,8 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Discipline Tracker Pro</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <!-- Use relative paths so GitHub Pages project pages (repo-name) find the file correctly -->
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+    <!-- Fallbacks for older browsers: PNG and ICO (optional) -->
+    <link rel="icon" href="favicon-32.png" sizes="32x32" />
+    <link rel="shortcut icon" href="favicon.ico" />
     <script
       crossorigin
       src="https://unpkg.com/react@18/umd/react.production.min.js"
@@ -31,7 +35,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useState, useEffect } = React;
+      const { useState, useEffect, useMemo } = React;
 
       // Lucide Icons as SVG components
       const Scale = ({ className = "h-6 w-6" }) => (
@@ -402,6 +406,13 @@
         // Helper: Verifica se uma data é no futuro
         const isFutureDate = (dateString) => {
           return dateString > todayString;
+        };
+
+        // Helper: Verifica se uma data (YYYY-MM-DD) pertence a um mês/ano específico
+        const dateMatchesMonthYear = (dateString, year, month) => {
+          if (!dateString || typeof dateString !== 'string') return false;
+          const [dateYear, dateMonth] = dateString.split('-');
+          return parseInt(dateYear) === year && parseInt(dateMonth) === (month + 1);
         };
 
         // Helper: Converte string YYYY-MM-DD para formato brasileiro sem timezone issues
@@ -1548,6 +1559,13 @@
             nofapNotes: log.nofapNotes || "",
           });
           setShowAddLog(true);
+          // Scroll suave para o formulário após um pequeno delay (para dar tempo do React renderizar)
+          setTimeout(() => {
+            const formElement = document.querySelector('.bg-slate-800.rounded-xl.p-6.border.border-slate-700');
+            if (formElement) {
+              formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
         };
 
         const handleSaveLog = () => {
@@ -8008,13 +8026,9 @@
                           {(() => {
                             const year = dailyLogViewDate.getFullYear();
                             const month = dailyLogViewDate.getMonth();
-                            const filtered = dailyLogs.filter((log) => {
-                              const logDate = new Date(log.date);
-                              return (
-                                logDate.getFullYear() === year &&
-                                logDate.getMonth() === month
-                              );
-                            });
+                            const filtered = dailyLogs.filter((log) => 
+                              dateMatchesMonthYear(log.date, year, month)
+                            );
                             return `${filtered.length} registro${
                               filtered.length !== 1 ? "s" : ""
                             }`;
@@ -9217,15 +9231,11 @@
                   <div className="space-y-3">
                     {dailyLogs
                       .filter((log) => {
-                        const logDate = new Date(log.date);
                         const viewYear = dailyLogViewDate.getFullYear();
                         const viewMonth = dailyLogViewDate.getMonth();
-                        return (
-                          logDate.getFullYear() === viewYear &&
-                          logDate.getMonth() === viewMonth
-                        );
+                        return dateMatchesMonthYear(log.date, viewYear, viewMonth);
                       })
-                      .sort((a, b) => new Date(b.date) - new Date(a.date))
+                      .sort((a, b) => b.date.localeCompare(a.date))
                       .map((log) => {
                         const exerciseTotal =
                           (log.exerciseCalories?.strength || 0) +
@@ -9588,13 +9598,9 @@
                   </div>
 
                   {dailyLogs.filter((log) => {
-                    const logDate = new Date(log.date);
                     const viewYear = dailyLogViewDate.getFullYear();
                     const viewMonth = dailyLogViewDate.getMonth();
-                    return (
-                      logDate.getFullYear() === viewYear &&
-                      logDate.getMonth() === viewMonth
-                    );
+                    return dateMatchesMonthYear(log.date, viewYear, viewMonth);
                   }).length === 0 && (
                     <div className="text-center py-12 text-slate-400">
                       <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
