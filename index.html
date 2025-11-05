@@ -6713,7 +6713,10 @@
                                 {safeFixed(muscleData.change, 2)} kg
                               </div>
                               {(() => {
-                                const first = muscleData.history[muscleData.history.length - 1]; // Mais antiga
+                                const first =
+                                  muscleData.history[
+                                    muscleData.history.length - 1
+                                  ]; // Mais antiga
                                 const latest = muscleData.history[0]; // Mais recente
                                 const weightChange =
                                   latest.weight - first.weight;
@@ -6819,7 +6822,10 @@
                               </div>
                               <div className="text-3xl font-bold text-blue-400">
                                 {(() => {
-                                  const first = muscleData.history[muscleData.history.length - 1]; // Mais antiga
+                                  const first =
+                                    muscleData.history[
+                                      muscleData.history.length - 1
+                                    ]; // Mais antiga
                                   const latest = muscleData.history[0]; // Mais recente
                                   const fatLost =
                                     first.fatMass - latest.fatMass;
@@ -6829,8 +6835,9 @@
                                 })()}
                               </div>
                               <div className="text-xs text-slate-400 mt-2">
-                                {muscleData.history[muscleData.history.length - 1].fatMass >
-                                muscleData.history[0].fatMass
+                                {muscleData.history[
+                                  muscleData.history.length - 1
+                                ].fatMass > muscleData.history[0].fatMass
                                   ? "🔥 Queimando gordura!"
                                   : "⚠️ Foco no deficit!"}
                               </div>
@@ -10736,10 +10743,11 @@
                                   "rgb(236 72 153)", // pink - midaxillary
                                 ];
 
-                                const siteValues = evaluations.map(
+                                const sortedEvals = getSortedEvaluations(evaluations).reverse();
+                                const siteValues = sortedEvals.map(
                                   (e) => e[site] || 0
                                 );
-                                const allValues = evaluations.flatMap((e) =>
+                                const allValues = sortedEvals.flatMap((e) =>
                                   [
                                     "chest",
                                     "abdominal",
@@ -10900,10 +10908,11 @@
                                   {siteNames[site]}
                                 </h4>
                                 <div className="space-y-2">
-                                  {evaluations.map((evaluation, idx) => {
+                                  {getSortedEvaluations(evaluations).reverse().map((evaluation, idx) => {
                                     const value = evaluation[site];
+                                    const sortedEvals = getSortedEvaluations(evaluations);
                                     const maxValue = Math.max(
-                                      ...evaluations.map((e) => e[site])
+                                      ...sortedEvals.map((e) => e[site])
                                     );
                                     const width = (value / maxValue) * 100;
 
