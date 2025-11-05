@@ -402,6 +402,48 @@
           return dateString > todayString;
         };
 
+        // Helper: Converte string YYYY-MM-DD para formato brasileiro sem timezone issues
+        const formatDateString = (dateString) => {
+          const [year, month, day] = dateString.split("-");
+          return `${day}/${month}/${year}`;
+        };
+
+        // Helper: Converte string YYYY-MM-DD para formato longo em português
+        const formatDateStringLong = (dateString) => {
+          const [year, month, day] = dateString.split("-");
+          const date = new Date(
+            parseInt(year),
+            parseInt(month) - 1,
+            parseInt(day)
+          );
+          const weekdays = [
+            "domingo",
+            "segunda-feira",
+            "terça-feira",
+            "quarta-feira",
+            "quinta-feira",
+            "sexta-feira",
+            "sábado",
+          ];
+          const months = [
+            "janeiro",
+            "fevereiro",
+            "março",
+            "abril",
+            "maio",
+            "junho",
+            "julho",
+            "agosto",
+            "setembro",
+            "outubro",
+            "novembro",
+            "dezembro",
+          ];
+          return `${weekdays[date.getDay()]}, ${day} de ${
+            months[date.getMonth()]
+          } de ${year}`;
+        };
+
         // Helper: Formata mês/ano para exibição
         const getMonthYearLabel = (date) => {
           return date.toLocaleDateString("pt-BR", {
@@ -2628,11 +2670,11 @@
                             const testLogs = [];
 
                             // Remove logs dos últimos N dias para substituir
-                            const cutoffDate = new Date(
-                              Date.now() - numDays * 24 * 60 * 60 * 1000
-                            )
-                              .toISOString()
-                              .split("T")[0];
+                            const cutoffDate = getLocalDateString(
+                              new Date(
+                                Date.now() - numDays * 24 * 60 * 60 * 1000
+                              )
+                            );
                             const filteredLogs = dailyLogs.filter(
                               (log) => log.date < cutoffDate
                             );
@@ -2688,7 +2730,7 @@
 
                               testLogs.push({
                                 id: Date.now() - i * 10000,
-                                date: currentDate.toISOString().split("T")[0],
+                                date: getLocalDateString(currentDate),
                                 calories:
                                   basalCalories +
                                   Math.floor(Math.random() * 400) +
@@ -2732,11 +2774,11 @@
                             const testLogs = [];
 
                             // Remove logs dos últimos N dias para substituir
-                            const cutoffDate = new Date(
-                              Date.now() - numDays * 24 * 60 * 60 * 1000
-                            )
-                              .toISOString()
-                              .split("T")[0];
+                            const cutoffDate = getLocalDateString(
+                              new Date(
+                                Date.now() - numDays * 24 * 60 * 60 * 1000
+                              )
+                            );
                             const filteredLogs = dailyLogs.filter(
                               (log) => log.date < cutoffDate
                             );
@@ -2791,7 +2833,7 @@
 
                               testLogs.push({
                                 id: Date.now() - i * 10000,
-                                date: currentDate.toISOString().split("T")[0],
+                                date: getLocalDateString(currentDate),
                                 calories:
                                   basalCalories -
                                   Math.floor(Math.random() * 400) -
@@ -2836,11 +2878,11 @@
                             const testLogs = [];
 
                             // Remove logs dos últimos N dias para substituir
-                            const cutoffDate = new Date(
-                              Date.now() - numDays * 24 * 60 * 60 * 1000
-                            )
-                              .toISOString()
-                              .split("T")[0];
+                            const cutoffDate = getLocalDateString(
+                              new Date(
+                                Date.now() - numDays * 24 * 60 * 60 * 1000
+                              )
+                            );
                             const filteredLogs = dailyLogs.filter(
                               (log) => log.date < cutoffDate
                             );
@@ -2896,7 +2938,7 @@
 
                               testLogs.push({
                                 id: Date.now() - i * 10000,
-                                date: currentDate.toISOString().split("T")[0],
+                                date: getLocalDateString(currentDate),
                                 calories: isFastingDay
                                   ? 0
                                   : basalCalories -
@@ -2951,11 +2993,11 @@
 
                               newEvals.push({
                                 id: Date.now() - i * 10000,
-                                date: new Date(
-                                  Date.now() - i * 30 * 24 * 60 * 60 * 1000
-                                )
-                                  .toISOString()
-                                  .split("T")[0],
+                                date: getLocalDateString(
+                                  new Date(
+                                    Date.now() - i * 30 * 24 * 60 * 60 * 1000
+                                  )
+                                ),
                                 weight: parseFloat(
                                   (baseWeight + Math.random() * 2).toFixed(1)
                                 ),
@@ -3381,11 +3423,12 @@
                               onClick={() => {
                                 const randomDays =
                                   Math.floor(Math.random() * 30) + 1;
-                                const randomDate = new Date(
-                                  Date.now() - randomDays * 24 * 60 * 60 * 1000
-                                )
-                                  .toISOString()
-                                  .split("T")[0];
+                                const randomDate = getLocalDateString(
+                                  new Date(
+                                    Date.now() -
+                                      randomDays * 24 * 60 * 60 * 1000
+                                  )
+                                );
                                 const filteredLogs = dailyLogs.filter(
                                   (log) => log.date !== randomDate
                                 );
@@ -3508,11 +3551,12 @@
                               onClick={() => {
                                 const randomDays =
                                   Math.floor(Math.random() * 30) + 1;
-                                const randomDate = new Date(
-                                  Date.now() - randomDays * 24 * 60 * 60 * 1000
-                                )
-                                  .toISOString()
-                                  .split("T")[0];
+                                const randomDate = getLocalDateString(
+                                  new Date(
+                                    Date.now() -
+                                      randomDays * 24 * 60 * 60 * 1000
+                                  )
+                                );
                                 const filteredLogs = dailyLogs.filter(
                                   (log) => log.date !== randomDate
                                 );
@@ -3645,9 +3689,7 @@
                                   Math.floor(Math.random() * 30) + 1;
                                 const randomDate = new Date(
                                   Date.now() - randomDays * 24 * 60 * 60 * 1000
-                                )
-                                  .toISOString()
-                                  .split("T")[0];
+                                );
                                 const filteredLogs = dailyLogs.filter(
                                   (log) => log.date !== randomDate
                                 );
@@ -3790,12 +3832,12 @@
                                 onClick={() => {
                                   const randomDays =
                                     Math.floor(Math.random() * 30) + 1;
-                                  const randomDate = new Date(
-                                    Date.now() -
-                                      randomDays * 24 * 60 * 60 * 1000
-                                  )
-                                    .toISOString()
-                                    .split("T")[0];
+                                  const randomDate = getLocalDateString(
+                                    new Date(
+                                      Date.now() -
+                                        randomDays * 24 * 60 * 60 * 1000
+                                    )
+                                  );
                                   const filteredLogs = dailyLogs.filter(
                                     (log) => log.date !== randomDate
                                   );
@@ -4024,12 +4066,12 @@
                                 onClick={() => {
                                   const randomDays =
                                     Math.floor(Math.random() * 30) + 1;
-                                  const randomDate = new Date(
-                                    Date.now() -
-                                      randomDays * 24 * 60 * 60 * 1000
-                                  )
-                                    .toISOString()
-                                    .split("T")[0];
+                                  const randomDate = getLocalDateString(
+                                    new Date(
+                                      Date.now() -
+                                        randomDays * 24 * 60 * 60 * 1000
+                                    )
+                                  );
                                   const filteredLogs = dailyLogs.filter(
                                     (log) => log.date !== randomDate
                                   );
@@ -4165,11 +4207,11 @@
                                 const testLogs = [];
 
                                 // Remove logs dos últimos N dias para substituir
-                                const cutoffDate = new Date(
-                                  Date.now() - numDays * 24 * 60 * 60 * 1000
-                                )
-                                  .toISOString()
-                                  .split("T")[0];
+                                const cutoffDate = getLocalDateString(
+                                  new Date(
+                                    Date.now() - numDays * 24 * 60 * 60 * 1000
+                                  )
+                                );
                                 const filteredLogs = dailyLogs.filter(
                                   (log) => log.date < cutoffDate
                                 );
@@ -4249,9 +4291,7 @@
 
                                   testLogs.push({
                                     id: Date.now() - i * 10000,
-                                    date: currentDate
-                                      .toISOString()
-                                      .split("T")[0],
+                                    date: getLocalDateString(currentDate),
                                     calories:
                                       basalCalories -
                                       Math.floor(Math.random() * 400) -
@@ -4311,11 +4351,11 @@
                                   const testLogs = [];
 
                                   // Remove logs dos últimos N dias
-                                  const cutoffDate = new Date(
-                                    Date.now() - numDays * 24 * 60 * 60 * 1000
-                                  )
-                                    .toISOString()
-                                    .split("T")[0];
+                                  const cutoffDate = getLocalDateString(
+                                    new Date(
+                                      Date.now() - numDays * 24 * 60 * 60 * 1000
+                                    )
+                                  );
                                   const filteredLogs = dailyLogs.filter(
                                     (log) => log.date < cutoffDate
                                   );
@@ -4376,9 +4416,7 @@
 
                                     testLogs.push({
                                       id: Date.now() - i * 10000,
-                                      date: currentDate
-                                        .toISOString()
-                                        .split("T")[0],
+                                      date: getLocalDateString(currentDate),
                                       calories:
                                         basalCalories -
                                         Math.floor(Math.random() * 400) -
@@ -4426,11 +4464,11 @@
                                   const testLogs = [];
 
                                   // Remove logs dos últimos N dias
-                                  const cutoffDate = new Date(
-                                    Date.now() - numDays * 24 * 60 * 60 * 1000
-                                  )
-                                    .toISOString()
-                                    .split("T")[0];
+                                  const cutoffDate = getLocalDateString(
+                                    new Date(
+                                      Date.now() - numDays * 24 * 60 * 60 * 1000
+                                    )
+                                  );
                                   const filteredLogs = dailyLogs.filter(
                                     (log) => log.date < cutoffDate
                                   );
@@ -4503,9 +4541,7 @@
 
                                     testLogs.push({
                                       id: Date.now() - i * 10000,
-                                      date: currentDate
-                                        .toISOString()
-                                        .split("T")[0],
+                                      date: getLocalDateString(currentDate),
                                       calories:
                                         basalCalories -
                                         Math.floor(Math.random() * 400) -
@@ -4565,11 +4601,11 @@
                                   const testLogs = [];
 
                                   // Remove logs dos últimos 7 dias
-                                  const cutoffDate = new Date(
-                                    Date.now() - numDays * 24 * 60 * 60 * 1000
-                                  )
-                                    .toISOString()
-                                    .split("T")[0];
+                                  const cutoffDate = getLocalDateString(
+                                    new Date(
+                                      Date.now() - numDays * 24 * 60 * 60 * 1000
+                                    )
+                                  );
                                   const filteredLogs = dailyLogs.filter(
                                     (log) => log.date < cutoffDate
                                   );
@@ -4616,9 +4652,7 @@
 
                                     testLogs.push({
                                       id: Date.now() - i * 10000,
-                                      date: currentDate
-                                        .toISOString()
-                                        .split("T")[0],
+                                      date: getLocalDateString(currentDate),
                                       calories:
                                         basalCalories -
                                         Math.floor(Math.random() * 400) -
@@ -4662,11 +4696,11 @@
                                   const testLogs = [];
 
                                   // Remove logs dos últimos 14 dias
-                                  const cutoffDate = new Date(
-                                    Date.now() - numDays * 24 * 60 * 60 * 1000
-                                  )
-                                    .toISOString()
-                                    .split("T")[0];
+                                  const cutoffDate = getLocalDateString(
+                                    new Date(
+                                      Date.now() - numDays * 24 * 60 * 60 * 1000
+                                    )
+                                  );
                                   const filteredLogs = dailyLogs.filter(
                                     (log) => log.date < cutoffDate
                                   );
@@ -4725,9 +4759,7 @@
 
                                     testLogs.push({
                                       id: Date.now() - i * 10000,
-                                      date: currentDate
-                                        .toISOString()
-                                        .split("T")[0],
+                                      date: getLocalDateString(currentDate),
                                       calories:
                                         basalCalories -
                                         Math.floor(Math.random() * 400) -
@@ -5732,9 +5764,7 @@
                                   day.isToday,
                                   day.isFuture
                                 )} transition-all cursor-pointer group relative`}
-                                title={`${new Date(day.date).toLocaleDateString(
-                                  "pt-BR"
-                                )}${
+                                title={`${formatDateString(day.date)}${
                                   day.isToday ? " (HOJE)" : ""
                                 } - ${getStatusLabel(
                                   day.status,
@@ -5766,9 +5796,7 @@
                                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
                                   <div className="bg-slate-900 text-white text-xs rounded-lg p-3 shadow-2xl border border-slate-700 whitespace-nowrap">
                                     <div className="font-bold mb-1 flex items-center gap-2">
-                                      {new Date(day.date).toLocaleDateString(
-                                        "pt-BR"
-                                      )}
+                                      {formatDateString(day.date)}
                                       {day.isToday && (
                                         <span className="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full">
                                           HOJE
@@ -5842,7 +5870,10 @@
                                   <span className="font-semibold">
                                     {logsInView.length}
                                   </span>{" "}
-                                  dias registrados neste período
+                                  {logsInView.length < 2
+                                    ? "dia registrado"
+                                    : "dias registrados"}{" "}
+                                  neste período
                                 </div>
                                 <div
                                   className={`font-bold ${
@@ -7789,7 +7820,7 @@
                             setShowAddEval(false);
                             setEditingEval(null);
                             setNewEval({
-                              date: new Date().toISOString().split("T")[0],
+                              date: getLocalDateString(),
                               weight: "",
                               triceps: "",
                               subscapular: "",
@@ -7824,10 +7855,8 @@
                                 gordura
                               </div>
                               <div className="text-slate-400">
-                                {new Date(eval_item.date).toLocaleDateString(
-                                  "pt-BR"
-                                )}{" "}
-                                • {eval_item.weight} kg
+                                {formatDateString(eval_item.date)} •{" "}
+                                {eval_item.weight} kg
                               </div>
                               <div className="text-slate-400 text-sm mt-1">
                                 Soma:{" "}
@@ -9154,7 +9183,7 @@
                             setShowAddLog(false);
                             setEditingLog(null);
                             setNewLog({
-                              date: new Date().toISOString().split("T")[0],
+                              date: getLocalDateString(),
                               calories: "",
                               isFasting: false,
                               isRefeed: false,
@@ -9287,15 +9316,7 @@
                                       })()}
 
                                     <div className="text-sm opacity-90">
-                                      {new Date(log.date).toLocaleDateString(
-                                        "pt-BR",
-                                        {
-                                          weekday: "long",
-                                          year: "numeric",
-                                          month: "long",
-                                          day: "numeric",
-                                        }
-                                      )}
+                                      {formatDateStringLong(log.date)}
                                     </div>
                                   </div>
                                 </div>
@@ -11878,9 +11899,7 @@
                               for (let i = 29; i >= 0; i--) {
                                 const date = new Date();
                                 date.setDate(date.getDate() - i);
-                                const dateStr = date
-                                  .toISOString()
-                                  .split("T")[0];
+                                const dateStr = getLocalDateString(date);
                                 const dayLog = dailyLogs.find(
                                   (log) => log.date === dateStr
                                 );
@@ -13830,9 +13849,7 @@
                               for (let i = 29; i >= 0; i--) {
                                 const date = new Date();
                                 date.setDate(date.getDate() - i);
-                                const dateStr = date
-                                  .toISOString()
-                                  .split("T")[0];
+                                const dateStr = getLocalDateString(date);
                                 const dayLog = dailyLogs.find(
                                   (log) => log.date === dateStr
                                 );
@@ -13987,9 +14004,8 @@
                                 const relapseDate = new Date(relapse.date);
                                 const dayBefore = new Date(relapseDate);
                                 dayBefore.setDate(dayBefore.getDate() - 1);
-                                const dayBeforeStr = dayBefore
-                                  .toISOString()
-                                  .split("T")[0];
+                                const dayBeforeStr =
+                                  getLocalDateString(dayBefore);
                                 const prevDayLog = dailyLogs.find(
                                   (log) => log.date === dayBeforeStr
                                 );
