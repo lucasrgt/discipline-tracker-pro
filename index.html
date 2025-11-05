@@ -7694,13 +7694,14 @@
                             Data
                           </label>
                           <input
-                            key={editingEvaluation || 'new'}
+                            key={editingEvaluation || "new"}
                             type="date"
                             defaultValue={newEval.date}
-                            onBlur={(e) =>
+                            onChange={(e) =>
                               setNewEval({ ...newEval, date: e.target.value })
                             }
-                            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                            onKeyDown={(e) => e.preventDefault()}
+                            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                           />
                         </div>
                         <div>
@@ -8095,13 +8096,14 @@
                             Data:
                           </label>
                           <input
-                            key={editingLog || 'new'}
+                            key={editingLog || "new"}
                             type="date"
                             defaultValue={newLog.date}
-                            onBlur={(e) =>
+                            onChange={(e) =>
                               setNewLog({ ...newLog, date: e.target.value })
                             }
-                            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm"
+                            onKeyDown={(e) => e.preventDefault()}
+                            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                           />
                         </div>
                       </div>
