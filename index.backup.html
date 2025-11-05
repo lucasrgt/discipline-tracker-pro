@@ -2569,14 +2569,14 @@
                                     {/* Modal Content */}
                                     <div className="p-6 space-y-6">
                                         {/* Goals Section */}
-                                        <div className={`${cardBgAlt} rounded-xl p-6 border ${cardBorder}`}>
-                                            <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${textPrimary}`}>
+                                        <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+                                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                                                 <Target className="h-6 w-6 text-blue-400" />
                                                 Metas & Configurações
                                             </h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className={`block text-sm font-semibold ${standardCardText} mb-2`}>
+                                                    <label className="block text-sm font-semibold text-slate-300 mb-2">
                                                         Calorias Basais / Manutenção. 
                                                         <br/>
                                                         NÃO CONTE NÍVEL DE ATIVIDADE!
@@ -2586,14 +2586,14 @@
                                                             type="number"
                                                             value={basalCalories}
                                                             onChange={(e) => setBasalCalories(Number(e.target.value))}
-                                                            className={`flex-1 ${inputBg} border ${inputBorder} rounded-lg px-4 py-3 ${inputText} text-lg ${focusRing} focus:outline-none`}
+                                                            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
                                                             placeholder="2300"
                                                         />
-                                                        <span className={`${textSecondary} font-semibold`}>kcal/dia</span>
+                                                        <span className="text-slate-400 font-semibold">kcal/dia</span>
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className={`block text-sm font-semibold ${standardCardText} mb-2`}>
+                                                    <label className="block text-sm font-semibold text-slate-300 mb-2">
                                                         Meta de Gordura Corporal
                                                     </label>
                                                     <div className="flex items-center gap-2">
@@ -2604,38 +2604,38 @@
                                                             max="25"
                                                             value={targetBodyFat}
                                                             onChange={(e) => setTargetBodyFat(Number(e.target.value))}
-                                                            className={`flex-1 ${inputBg} border ${inputBorder} rounded-lg px-4 py-3 ${inputText} text-lg ${focusRing} focus:outline-none`}
+                                                            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
                                                             placeholder="6.0"
                                                         />
-                                                        <span className={`${textSecondary} font-semibold`}>% gordura</span>
+                                                        <span className="text-slate-400 font-semibold">% gordura</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Optional Modules */}
-                                        <div className={`${isDark ? 'bg-gradient-to-br from-purple-900/30 to-pink-900/30' : 'bg-gradient-to-br from-purple-50 to-pink-50'} rounded-xl p-6 border-2 ${isDark ? 'border-purple-500/30' : 'border-purple-300'}`}>
-                                            <h3 className={`text-2xl font-bold mb-2 flex items-center gap-2 ${textPrimary}`}>
+                                        <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 rounded-xl p-6 border-2 border-purple-500/30">
+                                            <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
                                                 <span className="text-3xl">🔮</span>
                                                 Módulos Opcionais
                                             </h3>
-                                            <p className={`text-sm ${textSecondary} mb-6`}>Ative funcionalidades extras para uma transformação completa</p>
+                                            <p className="text-sm text-slate-400 mb-6">Ative funcionalidades extras para uma transformação completa</p>
                                             
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {/* Spiritual Mode Toggle */}
-                                                <div className={`${cardBgAlt} rounded-lg p-5 border ${cardBorder}`}>
+                                                <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-600">
                                                     <div className="flex items-center justify-between mb-3">
                                                         <div className="flex items-center gap-3">
                                                             <span className="text-3xl">🧘</span>
                                                             <div>
-                                                                <h4 className={`font-bold text-lg ${textPrimary}`}>Modo Espiritual</h4>
-                                                                <p className={`text-xs ${textSecondary}`}>Meditação & Journaling</p>
+                                                                <h4 className="font-bold text-lg">Modo Espiritual</h4>
+                                                                <p className="text-xs text-slate-400">Meditação & Journaling</p>
                                                             </div>
                                                         </div>
                                                         <button
                                                             onClick={() => setSpiritualModeEnabled(!spiritualModeEnabled)}
                                                             className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-                                                                spiritualModeEnabled ? 'bg-green-600' : (isDark ? 'bg-slate-600' : 'bg-slate-300')
+                                                                spiritualModeEnabled ? 'bg-green-600' : 'bg-slate-600'
                                                             }`}
                                                         >
                                                             <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
@@ -2643,25 +2643,25 @@
                                                             }`} />
                                                         </button>
                                                     </div>
-                                                    <p className={`text-sm ${standardCardText}`}>
+                                                    <p className="text-sm text-slate-300">
                                                         Rastreie meditação, gratidão, julgamentos e práticas espirituais diárias
                                                     </p>
                                                 </div>
 
                                                 {/* NoFap Mode Toggle */}
-                                                <div className={`${cardBgAlt} rounded-lg p-5 border ${cardBorder}`}>
+                                                <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-600">
                                                     <div className="flex items-center justify-between mb-3">
                                                         <div className="flex items-center gap-3">
                                                             <span className="text-3xl">💪</span>
                                                             <div>
-                                                                <h4 className={`font-bold text-lg ${textPrimary}`}>Modo NoFap</h4>
-                                                                <p className={`text-xs ${textSecondary}`}>Controle & Disciplina</p>
+                                                                <h4 className="font-bold text-lg">Modo NoFap</h4>
+                                                                <p className="text-xs text-slate-400">Controle & Disciplina</p>
                                                             </div>
                                                         </div>
                                                         <button
                                                             onClick={() => setNofapModeEnabled(!nofapModeEnabled)}
                                                             className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-                                                                nofapModeEnabled ? 'bg-green-600' : (isDark ? 'bg-slate-600' : 'bg-slate-300')
+                                                                nofapModeEnabled ? 'bg-green-600' : 'bg-slate-600'
                                                             }`}
                                                         >
                                                             <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
@@ -2669,7 +2669,7 @@
                                                             }`} />
                                                         </button>
                                                     </div>
-                                                    <p className={`text-sm ${standardCardText}`}>
+                                                    <p className="text-sm text-slate-300">
                                                         Rastreie sua jornada NoFap com análise de padrões e suporte anti-recaída
                                                     </p>
                                                 </div>
@@ -3382,25 +3382,25 @@
                                         <div className="text-4xl font-bold text-purple-400">
                                             {safeFixed(stats.fatToLose, 1)} kg
                                         </div>
-                                        <div className={`text-sm ${textSecondary} mt-2`}>
+                                        <div className="text-sm text-slate-400 mt-2">
                                             Peso atual: {evaluations.length > 0 ? evaluations[evaluations.length - 1].weight : 0} kg
                                         </div>
-                                        <div className={`text-sm ${textSecondary}`}>
+                                        <div className="text-sm text-slate-400">
                                             Peso alvo: {safeFixed(stats.targetWeight, 1)} kg
                                         </div>
                                     </div>
 
                                     {/* Total Skinfolds */}
-                                    <div className={`${standardCard} rounded-xl p-6 border`}>
+                                    <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700">
                                         <div className="flex items-center justify-between mb-4">
-                                            <h3 className={`text-lg font-semibold ${standardCardText}`}>Soma das 7 Dobras</h3>
+                                            <h3 className="text-lg font-semibold text-slate-300">Soma das 7 Dobras</h3>
                                             <Ruler className="h-6 w-6 text-cyan-400" />
                                         </div>
                                         <div className="text-4xl font-bold text-cyan-400">
                                             {stats.totalSkinfolds} mm
                                         </div>
-                                        <div className={`text-sm ${textSecondary} mt-2`}>Medidas atuais</div>
-                                        <div className={`text-sm ${textSecondary}`}>7 pontos somados</div>
+                                        <div className="text-sm text-slate-400 mt-2">Medidas atuais</div>
+                                        <div className="text-sm text-slate-400">7 pontos somados</div>
                                     </div>
                                 </div>
 
@@ -4463,7 +4463,7 @@
                                 </div>
 
                                 {/* Navegação de Mês/Ano */}
-                                <div className={`${cardBg} rounded-lg p-4 border ${cardBorder}`}>
+                                <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
                                     <div className="flex items-center justify-between">
                                         <button
                                             onClick={() => {
@@ -4471,7 +4471,7 @@
                                                 newDate.setMonth(newDate.getMonth() - 1);
                                                 setDailyLogViewDate(newDate);
                                             }}
-                                            className={`${buttonBg} ${buttonHover} px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${textPrimary}`}
+                                            className="bg-slate-600 hover:bg-slate-500 px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -4480,10 +4480,10 @@
                                         </button>
                                         
                                         <div className="text-center">
-                                            <div className={`text-lg font-bold ${textPrimary}`}>
+                                            <div className="text-lg font-bold text-white">
                                                 {dailyLogViewDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())}
                                             </div>
-                                            <div className={`text-xs ${textSecondary} mt-1`}>
+                                            <div className="text-xs text-slate-400 mt-1">
                                                 {(() => {
                                                     const year = dailyLogViewDate.getFullYear();
                                                     const month = dailyLogViewDate.getMonth();
