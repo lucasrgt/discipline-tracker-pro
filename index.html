@@ -6964,7 +6964,7 @@
                                                     {/* Calendário estilo GitHub */}
                                                     <div className="mb-6">
                                                         {/* Dias da semana */}
-                                                        <div className="grid grid-cols-7 gap-2 mb-2">
+                                                        <div className="grid grid-cols-7 gap-1.5 mb-2 max-w-md">
                                                             {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
                                                                 <div key={day} className="text-xs text-slate-400 text-center font-semibold">
                                                                     {day}
@@ -6973,7 +6973,7 @@
                                                         </div>
                                                         
                                                         {/* Grid de dias */}
-                                                        <div className="grid grid-cols-7 gap-2">
+                                                        <div className="grid grid-cols-7 gap-1.5 max-w-md">
                                                             {calendarDays.map((day, idx) => {
                                                                 if (day === null) {
                                                                     return <div key={`empty-${idx}`} className="aspect-square"></div>;
@@ -7038,29 +7038,29 @@
                                                         </div>
                                                         
                                                         {/* Legenda */}
-                                                        <div className="flex flex-wrap items-center gap-4 mt-4 text-xs">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-4 h-4 rounded bg-purple-600/60 border-2 border-purple-400/70 ring-1 ring-purple-300"></div>
-                                                                <span className="text-slate-300">🔥 Jejum 24h</span>
+                                                        <div className="flex flex-wrap items-center gap-3 mt-4 text-xs max-w-md">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-3 h-3 rounded bg-purple-600/60 border-2 border-purple-400/70 ring-1 ring-purple-300"></div>
+                                                                <span className="text-slate-300">🔥 Jejum</span>
                                                             </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-4 h-4 rounded bg-green-500/60 border-2 border-green-300/70"></div>
-                                                                <span className="text-slate-300">Excelente (60+ min, protocolo completo)</span>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-3 h-3 rounded bg-green-500/60 border-2 border-green-300/70"></div>
+                                                                <span className="text-slate-300">Excelente</span>
                                                             </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-4 h-4 rounded bg-green-700/50 border-2 border-green-400/60"></div>
-                                                                <span className="text-slate-300">Bom (40+ min, protocolo)</span>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-3 h-3 rounded bg-green-700/50 border-2 border-green-400/60"></div>
+                                                                <span className="text-slate-300">Bom</span>
                                                             </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-4 h-4 rounded bg-green-900/30 border-2 border-green-500/40"></div>
-                                                                <span className="text-slate-300">OK (alguma prática)</span>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-3 h-3 rounded bg-green-900/30 border-2 border-green-500/40"></div>
+                                                                <span className="text-slate-300">OK</span>
                                                             </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-4 h-4 rounded bg-red-900/40 border-2 border-red-500/50"></div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-3 h-3 rounded bg-red-900/40 border-2 border-red-500/50"></div>
                                                                 <span className="text-slate-300">Incompleto</span>
                                                             </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-4 h-4 rounded bg-slate-700/30 border-2 border-slate-600/30"></div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-3 h-3 rounded bg-slate-700/30 border-2 border-slate-600/30"></div>
                                                                 <span className="text-slate-300">Sem registro</span>
                                                             </div>
                                                         </div>
