@@ -109,6 +109,18 @@
             </svg>
         );
 
+        const Sun = ({ className = "h-6 w-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+        );
+
+        const Moon = ({ className = "h-6 w-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+        );
+
         const X = ({ className = "h-6 w-6" }) => (
             <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -143,6 +155,7 @@
             const [editingLog, setEditingLog] = useState(null); // ID do log sendo editado
             const [dailyLogViewDate, setDailyLogViewDate] = useState(new Date()); // Data de navegação nos logs
             const [deficitViewMode, setDeficitViewMode] = useState('real'); // 'real' ou 'simulado'
+            const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark'); // 'dark' ou 'light'
             const [basalCalories, setBasalCalories] = useState(2300);
             const [targetBodyFat, setTargetBodyFat] = useState(6.0);
             const [isSetupComplete, setIsSetupComplete] = useState(false);
@@ -423,6 +436,13 @@
                     }
                 };
                 reader.readAsText(file);
+            };
+
+            // Toggle theme
+            const toggleTheme = () => {
+                const newTheme = theme === 'dark' ? 'light' : 'dark';
+                setTheme(newTheme);
+                localStorage.setItem('theme', newTheme);
             };
 
             // Complete initial setup
@@ -1320,8 +1340,20 @@
                 );
             }
 
+            // Theme classes
+            const bgMain = theme === 'dark' 
+                ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white' 
+                : 'bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900';
+            
+            const cardBg = theme === 'dark' ? 'bg-slate-800/50' : 'bg-white/80';
+            const cardBorder = theme === 'dark' ? 'border-slate-700' : 'border-slate-200';
+            const textPrimary = theme === 'dark' ? 'text-white' : 'text-slate-900';
+            const textSecondary = theme === 'dark' ? 'text-slate-400' : 'text-slate-600';
+            const inputBg = theme === 'dark' ? 'bg-slate-700' : 'bg-white';
+            const inputBorder = theme === 'dark' ? 'border-slate-600' : 'border-slate-300';
+
             return (
-                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4">
+                <div className={`min-h-screen ${bgMain} p-4`}>
                     <div className="max-w-7xl mx-auto">
                         {/* Admin Panel */}
                         {adminMode && (
@@ -2457,10 +2489,27 @@
                             </div>
                         )}
 
+                        {/* Theme Toggle Button - Fixed Top Right */}
+                        <button
+                            onClick={toggleTheme}
+                            className={`fixed top-4 right-20 z-50 p-3 rounded-full shadow-2xl border-2 transition-all hover:scale-110 ${
+                                theme === 'dark'
+                                    ? 'bg-slate-700 hover:bg-slate-600 text-yellow-300 border-slate-500 hover:border-slate-400'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300 hover:border-slate-400'
+                            }`}
+                            title={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+                        >
+                            {theme === 'dark' ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
+                        </button>
+
                         {/* Settings Button - Fixed Top Right */}
                         <button
                             onClick={() => setShowSettingsModal(true)}
-                            className="fixed top-4 right-4 z-50 bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-full shadow-2xl border-2 border-slate-500 hover:border-slate-400 transition-all hover:scale-110"
+                            className={`fixed top-4 right-4 z-50 p-3 rounded-full shadow-2xl border-2 transition-all hover:scale-110 ${
+                                theme === 'dark'
+                                    ? 'bg-slate-700 hover:bg-slate-600 text-white border-slate-500 hover:border-slate-400'
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300 hover:border-slate-400'
+                            }`}
                             title="Configurações"
                         >
                             <Settings className="h-6 w-6" />
@@ -6964,16 +7013,16 @@
                                                     {/* Calendário estilo GitHub */}
                                                     <div className="mb-6">
                                                         {/* Dias da semana */}
-                                                        <div className="grid grid-cols-7 gap-2 mb-2">
+                                                        <div className="grid grid-cols-7 gap-1.5 mb-1.5">
                                                             {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-                                                                <div key={day} className="text-xs text-slate-400 text-center font-semibold">
+                                                                <div key={day} className="text-[10px] text-slate-400 text-center font-semibold">
                                                                     {day}
                                                                 </div>
                                                             ))}
                                                         </div>
                                                         
                                                         {/* Grid de dias */}
-                                                        <div className="grid grid-cols-7 gap-2">
+                                                        <div className="grid grid-cols-7 gap-1.5">
                                                             {calendarDays.map((day, idx) => {
                                                                 if (day === null) {
                                                                     return <div key={`empty-${idx}`} className="aspect-square"></div>;
@@ -7023,7 +7072,7 @@
                                                                         key={day}
                                                                         onClick={() => setSelectedSpiritualDay(log ? dateStr : null)}
                                                                         disabled={!log}
-                                                                        className={`aspect-square rounded-lg border-2 transition-all flex items-center justify-center text-sm font-semibold
+                                                                        className={`aspect-square rounded-md border transition-all flex items-center justify-center text-xs font-semibold
                                                                             ${colorClasses[quality]}
                                                                             ${isSelected ? 'ring-2 ring-purple-400 scale-110' : ''}
                                                                             ${isToday ? 'ring-2 ring-cyan-400' : ''}
