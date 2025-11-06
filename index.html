@@ -385,6 +385,9 @@
 
         // Sistema de Navegação Temporal
         const [currentViewDate, setCurrentViewDate] = useState(new Date());
+        
+        // Estado de carregamento
+        const [isDataLoaded, setIsDataLoaded] = useState(false);
 
         // Helper: Pega data local no formato YYYY-MM-DD (sem problemas de timezone)
         const getLocalDateString = (date = new Date()) => {
@@ -635,35 +638,79 @@
 
         // Load data from localStorage and check if setup is complete
         useEffect(() => {
-          const savedEvals = localStorage.getItem("bodyEvaluations");
-          const savedLogs = localStorage.getItem("dailyLogs");
-          const savedBasal = localStorage.getItem("basalCalories");
-          const savedTargetBF = localStorage.getItem("targetBodyFat");
-          const setupComplete = localStorage.getItem("setupComplete");
-          const savedFitnessMode = localStorage.getItem("fitnessModeEnabled");
-          const savedSpiritualMode = localStorage.getItem(
-            "spiritualModeEnabled"
-          );
-          const savedNofapMode = localStorage.getItem("nofapModeEnabled");
-          const savedSpiritualLogs = localStorage.getItem("spiritualLogs");
-          const savedNofapLogs = localStorage.getItem("nofapLogs");
+          try {
+            const savedEvals = localStorage.getItem("bodyEvaluations");
+            const savedLogs = localStorage.getItem("dailyLogs");
+            const savedBasal = localStorage.getItem("basalCalories");
+            const savedTargetBF = localStorage.getItem("targetBodyFat");
+            const setupComplete = localStorage.getItem("setupComplete");
+            const savedFitnessMode = localStorage.getItem("fitnessModeEnabled");
+            const savedSpiritualMode = localStorage.getItem(
+              "spiritualModeEnabled"
+            );
+            const savedNofapMode = localStorage.getItem("nofapModeEnabled");
+            const savedSpiritualLogs = localStorage.getItem("spiritualLogs");
+            const savedNofapLogs = localStorage.getItem("nofapLogs");
 
-          if (savedEvals) setEvaluations(JSON.parse(savedEvals));
-          if (savedLogs) setDailyLogs(JSON.parse(savedLogs));
-          if (savedBasal) setBasalCalories(Number(savedBasal));
-          if (savedTargetBF) setTargetBodyFat(Number(savedTargetBF));
-          if (savedFitnessMode !== null)
-            setFitnessModeEnabled(savedFitnessMode === "true");
-          if (savedSpiritualMode)
-            setSpiritualModeEnabled(savedSpiritualMode === "true");
-          if (savedNofapMode) setNofapModeEnabled(savedNofapMode === "true");
-          if (savedSpiritualLogs)
-            setSpiritualLogs(JSON.parse(savedSpiritualLogs));
-          if (savedNofapLogs) setNofapLogs(JSON.parse(savedNofapLogs));
+            if (savedEvals) {
+              const parsed = JSON.parse(savedEvals);
+              if (Array.isArray(parsed)) {
+                setEvaluations(parsed);
+              } else {
+                console.error("bodyEvaluations não é um array válido");
+              }
+            }
+            
+            if (savedLogs) {
+              const parsed = JSON.parse(savedLogs);
+              if (Array.isArray(parsed)) {
+                setDailyLogs(parsed);
+              } else {
+                console.error("dailyLogs não é um array válido");
+              }
+            }
+            
+            if (savedBasal) setBasalCalories(Number(savedBasal));
+            if (savedTargetBF) setTargetBodyFat(Number(savedTargetBF));
+            if (savedFitnessMode !== null)
+              setFitnessModeEnabled(savedFitnessMode === "true");
+            if (savedSpiritualMode)
+              setSpiritualModeEnabled(savedSpiritualMode === "true");
+            if (savedNofapMode) setNofapModeEnabled(savedNofapMode === "true");
+            
+            if (savedSpiritualLogs) {
+              const parsed = JSON.parse(savedSpiritualLogs);
+              if (Array.isArray(parsed)) {
+                setSpiritualLogs(parsed);
+              }
+            }
+            
+            if (savedNofapLogs) {
+              const parsed = JSON.parse(savedNofapLogs);
+              if (Array.isArray(parsed)) {
+                setNofapLogs(parsed);
+              }
+            }
 
-          // Check if setup is complete
-          if (setupComplete === "true") {
-            setIsSetupComplete(true);
+            // Check if setup is complete
+            if (setupComplete === "true") {
+              setIsSetupComplete(true);
+            }
+            
+            console.log("Dados carregados do localStorage:", {
+              evaluations: savedEvals ? JSON.parse(savedEvals).length : 0,
+              dailyLogs: savedLogs ? JSON.parse(savedLogs).length : 0,
+              basalCalories: savedBasal,
+              targetBodyFat: savedTargetBF,
+            });
+            
+          } catch (error) {
+            console.error("Erro ao carregar dados do localStorage:", error);
+            // Em caso de erro, não faz nada para manter os arrays vazios
+            // Isso previne que o app quebre completamente
+          } finally {
+            // Marca dados como carregados (com sucesso ou não)
+            setIsDataLoaded(true);
           }
         }, []);
 
@@ -1971,6 +2018,18 @@
         const stats = calculateDeficitNeeded();
         const caloriesStats = getTotalCaloriesStats();
         const simulatedDeficit = getSimulatedDeficit();
+
+        // Loading screen while data is being loaded from localStorage
+        if (!isDataLoaded) {
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-6xl mb-4">⏳</div>
+                <h2 className="text-2xl font-bold text-slate-300">Carregando dados...</h2>
+              </div>
+            </div>
+          );
+        }
 
         // Welcome Screen for new users
         if (!isSetupComplete && !showImportOnWelcome && !showModuleSelection) {
