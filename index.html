@@ -385,7 +385,7 @@
 
         // Sistema de Navegação Temporal
         const [currentViewDate, setCurrentViewDate] = useState(new Date());
-        
+
         // Estado de carregamento
         const [isDataLoaded, setIsDataLoaded] = useState(false);
 
@@ -505,6 +505,26 @@
         const getLatestEvaluation = (evals) => {
           if (!evals || evals.length === 0) return null;
           return getSortedEvaluations(evals)[0];
+        };
+
+        // Helper: Valida e sanitiza valores numéricos de inputs
+        const validateNumberInput = (value, min = 0, max = null) => {
+          // Remove caracteres não numéricos exceto ponto e sinal negativo
+          let sanitized = value.toString().replace(/[^\d.-]/g, '');
+          
+          // Converte para número
+          let num = parseFloat(sanitized);
+          
+          // Se não é um número válido, retorna vazio
+          if (isNaN(num)) return '';
+          
+          // Aplica min
+          if (num < min) num = min;
+          
+          // Aplica max se definido
+          if (max !== null && num > max) num = max;
+          
+          return num.toString();
         };
 
         // Navegação: Anterior/Próximo
@@ -660,7 +680,7 @@
                 console.error("bodyEvaluations não é um array válido");
               }
             }
-            
+
             if (savedLogs) {
               const parsed = JSON.parse(savedLogs);
               if (Array.isArray(parsed)) {
@@ -669,7 +689,7 @@
                 console.error("dailyLogs não é um array válido");
               }
             }
-            
+
             if (savedBasal) setBasalCalories(Number(savedBasal));
             if (savedTargetBF) setTargetBodyFat(Number(savedTargetBF));
             if (savedFitnessMode !== null)
@@ -677,14 +697,14 @@
             if (savedSpiritualMode)
               setSpiritualModeEnabled(savedSpiritualMode === "true");
             if (savedNofapMode) setNofapModeEnabled(savedNofapMode === "true");
-            
+
             if (savedSpiritualLogs) {
               const parsed = JSON.parse(savedSpiritualLogs);
               if (Array.isArray(parsed)) {
                 setSpiritualLogs(parsed);
               }
             }
-            
+
             if (savedNofapLogs) {
               const parsed = JSON.parse(savedNofapLogs);
               if (Array.isArray(parsed)) {
@@ -696,14 +716,13 @@
             if (setupComplete === "true") {
               setIsSetupComplete(true);
             }
-            
+
             console.log("Dados carregados do localStorage:", {
               evaluations: savedEvals ? JSON.parse(savedEvals).length : 0,
               dailyLogs: savedLogs ? JSON.parse(savedLogs).length : 0,
               basalCalories: savedBasal,
               targetBodyFat: savedTargetBF,
             });
-            
           } catch (error) {
             console.error("Erro ao carregar dados do localStorage:", error);
             // Em caso de erro, não faz nada para manter os arrays vazios
@@ -2025,7 +2044,9 @@
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl mb-4">⏳</div>
-                <h2 className="text-2xl font-bold text-slate-300">Carregando dados...</h2>
+                <h2 className="text-2xl font-bold text-slate-300">
+                  Carregando dados...
+                </h2>
               </div>
             </div>
           );
@@ -2458,11 +2479,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="20"
+                            max="300"
                             value={setupData.weight}
                             onChange={(e) =>
                               setSetupData({
                                 ...setupData,
-                                weight: e.target.value,
+                                weight: validateNumberInput(e.target.value, 20, 300),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
@@ -2475,11 +2498,13 @@
                           </label>
                           <input
                             type="number"
+                            min="1000"
+                            max="5000"
                             value={setupData.basalCalories}
                             onChange={(e) =>
                               setSetupData({
                                 ...setupData,
-                                basalCalories: e.target.value,
+                                basalCalories: validateNumberInput(e.target.value, 1000, 5000),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
@@ -2493,11 +2518,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="3"
+                            max="50"
                             value={setupData.targetBodyFat}
                             onChange={(e) =>
                               setSetupData({
                                 ...setupData,
-                                targetBodyFat: e.target.value,
+                                targetBodyFat: validateNumberInput(e.target.value, 3, 50),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
@@ -2530,11 +2557,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={setupData.triceps}
                             onChange={(e) =>
                               setSetupData({
                                 ...setupData,
-                                triceps: e.target.value,
+                                triceps: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -2548,11 +2577,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={setupData.subscapular}
                             onChange={(e) =>
                               setSetupData({
                                 ...setupData,
-                                subscapular: e.target.value,
+                                subscapular: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -2566,11 +2597,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={setupData.chest}
                             onChange={(e) =>
                               setSetupData({
                                 ...setupData,
-                                chest: e.target.value,
+                                chest: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -2584,11 +2617,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={setupData.midaxillary}
                             onChange={(e) =>
                               setSetupData({
                                 ...setupData,
-                                midaxillary: e.target.value,
+                                midaxillary: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -2602,11 +2637,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={setupData.abdominal}
                             onChange={(e) =>
                               setSetupData({
                                 ...setupData,
-                                abdominal: e.target.value,
+                                abdominal: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -2620,11 +2657,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={setupData.suprailiac}
                             onChange={(e) =>
                               setSetupData({
                                 ...setupData,
-                                suprailiac: e.target.value,
+                                suprailiac: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -2638,11 +2677,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={setupData.thigh}
                             onChange={(e) =>
                               setSetupData({
                                 ...setupData,
-                                thigh: e.target.value,
+                                thigh: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -4996,10 +5037,13 @@
                             <div className="flex items-center gap-2">
                               <input
                                 type="number"
+                                min="1000"
+                                max="5000"
                                 value={basalCalories}
-                                onChange={(e) =>
-                                  setBasalCalories(Number(e.target.value))
-                                }
+                                onChange={(e) => {
+                                  const validated = validateNumberInput(e.target.value, 1000, 5000);
+                                  if (validated !== '') setBasalCalories(Number(validated));
+                                }}
                                 className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
                                 placeholder="2300"
                               />
@@ -5018,12 +5062,13 @@
                               <input
                                 type="number"
                                 step="0.1"
-                                min="4"
-                                max="25"
+                                min="3"
+                                max="50"
                                 value={targetBodyFat}
-                                onChange={(e) =>
-                                  setTargetBodyFat(Number(e.target.value))
-                                }
+                                onChange={(e) => {
+                                  const validated = validateNumberInput(e.target.value, 3, 50);
+                                  if (validated !== '') setTargetBodyFat(Number(validated));
+                                }}
                                 className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg"
                                 placeholder="6.0"
                               />
@@ -7806,9 +7851,11 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="20"
+                            max="300"
                             value={newEval.weight}
                             onChange={(e) =>
-                              setNewEval({ ...newEval, weight: e.target.value })
+                              setNewEval({ ...newEval, weight: validateNumberInput(e.target.value, 20, 300) })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
                             placeholder="80.5"
@@ -7824,11 +7871,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={newEval.triceps}
                             onChange={(e) =>
                               setNewEval({
                                 ...newEval,
-                                triceps: e.target.value,
+                                triceps: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -7841,11 +7890,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={newEval.subscapular}
                             onChange={(e) =>
                               setNewEval({
                                 ...newEval,
-                                subscapular: e.target.value,
+                                subscapular: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -7858,9 +7909,11 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={newEval.chest}
                             onChange={(e) =>
-                              setNewEval({ ...newEval, chest: e.target.value })
+                              setNewEval({ ...newEval, chest: validateNumberInput(e.target.value, 0, 100) })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
                           />
@@ -7872,11 +7925,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={newEval.midaxillary}
                             onChange={(e) =>
                               setNewEval({
                                 ...newEval,
-                                midaxillary: e.target.value,
+                                midaxillary: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -7889,11 +7944,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={newEval.abdominal}
                             onChange={(e) =>
                               setNewEval({
                                 ...newEval,
-                                abdominal: e.target.value,
+                                abdominal: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -7906,11 +7963,13 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={newEval.suprailiac}
                             onChange={(e) =>
                               setNewEval({
                                 ...newEval,
-                                suprailiac: e.target.value,
+                                suprailiac: validateNumberInput(e.target.value, 0, 100),
                               })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
@@ -7923,9 +7982,11 @@
                           <input
                             type="number"
                             step="0.1"
+                            min="0"
+                            max="100"
                             value={newEval.thigh}
                             onChange={(e) =>
-                              setNewEval({ ...newEval, thigh: e.target.value })
+                              setNewEval({ ...newEval, thigh: validateNumberInput(e.target.value, 0, 100) })
                             }
                             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
                           />
@@ -8223,11 +8284,13 @@
                               </label>
                               <input
                                 type="number"
+                                min="0"
+                                max="10000"
                                 value={newLog.calories}
                                 onChange={(e) =>
                                   setNewLog({
                                     ...newLog,
-                                    calories: e.target.value,
+                                    calories: validateNumberInput(e.target.value, 0, 10000),
                                   })
                                 }
                                 disabled={newLog.isFasting}
@@ -8397,6 +8460,8 @@
                                   </label>
                                   <input
                                     type="number"
+                                    min="0"
+                                    max="2000"
                                     value={
                                       newLog.exerciseCalories?.strength || ""
                                     }
@@ -8405,13 +8470,12 @@
                                         ...newLog,
                                         exerciseCalories: {
                                           ...newLog.exerciseCalories,
-                                          strength: e.target.value,
+                                          strength: validateNumberInput(e.target.value, 0, 2000),
                                         },
                                       })
                                     }
                                     className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
                                     placeholder="200"
-                                    min="0"
                                   />
                                   <p className="text-xs text-slate-500 mt-1">
                                     ~200-400 kcal/treino típico
@@ -8465,6 +8529,8 @@
                                     <>
                                       <input
                                         type="number"
+                                        min="0"
+                                        max="2000"
                                         value={
                                           newLog.exerciseCalories?.cardio || ""
                                         }
@@ -8473,13 +8539,12 @@
                                             ...newLog,
                                             exerciseCalories: {
                                               ...newLog.exerciseCalories,
-                                              cardio: e.target.value,
+                                              cardio: validateNumberInput(e.target.value, 0, 2000),
                                             },
                                           })
                                         }
                                         className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
                                         placeholder="300"
-                                        min="0"
                                       />
                                       <p className="text-xs text-slate-500 mt-1">
                                         Digite manualmente (smartwatch, etc)
@@ -8519,32 +8584,34 @@
                                             <input
                                               type="number"
                                               step="0.1"
+                                              min="0"
+                                              max="200"
                                               value={newLog.cardioDistance}
                                               onChange={(e) =>
                                                 setNewLog({
                                                   ...newLog,
                                                   cardioDistance:
-                                                    e.target.value,
+                                                    validateNumberInput(e.target.value, 0, 200),
                                                 })
                                               }
                                               className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-sm"
                                               placeholder="Distância (km)"
-                                              min="0"
                                             />
                                           </div>
                                           <div>
                                             <input
                                               type="number"
+                                              min="0"
+                                              max="600"
                                               value={newLog.cardioTime}
                                               onChange={(e) =>
                                                 setNewLog({
                                                   ...newLog,
-                                                  cardioTime: e.target.value,
+                                                  cardioTime: validateNumberInput(e.target.value, 0, 600),
                                                 })
                                               }
                                               className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-sm"
                                               placeholder="Tempo (min)"
-                                              min="0"
                                             />
                                           </div>
                                         </div>
